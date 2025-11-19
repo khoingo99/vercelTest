@@ -1,13 +1,13 @@
-import './globals.css';
+import "./globals.css";
 
 export const metadata = {
-  title: 'Blog Dashboard - Prisma + Neon Demo',
-  description: 'Demo Next.js + Prisma + Neon + Vercel',
+  title: "Vision Ticket System",
+  description: "Next.js + Prisma + Neon demo (no NextAuth)",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi">
+    <html lang="ko">
       <body>{children}</body>
     </html>
   );

@@ -1,34 +1,42 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-
+import { NextResponse } from "next/server";
+import prisma from "../../../../lib/prisma";
 
 export async function POST(req) {
   try {
-    const { email, password } = await req.json();
+    const { username, email, password } = await req.json();
+    const identifier = username || email;
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return NextResponse.json(
-        { success: false, message: 'Email và mật khẩu là bắt buộc' },
+        { success: false, message: "아이디 / 이메일과 비밀번호는 필수입니다." },
         { status: 400 }
       );
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ username: identifier }, { email: identifier }] },
+    });
+
     if (!user || user.password !== password) {
       return NextResponse.json(
-        { success: false, message: 'Sai email hoặc mật khẩu' },
+        { success: false, message: "아이디 또는 비밀번호가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+      },
     });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error("Login error:", err);
     return NextResponse.json(
-      { success: false, message: 'Đăng nhập thất bại' },
+      { success: false, message: "로그인에 실패했습니다." },
       { status: 500 }
     );
   }

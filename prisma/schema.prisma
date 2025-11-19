@@ -7,20 +7,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
-  posts     Post[]
+enum TicketType {
+  SERVER
+  CAMERA
+  LIGHT
+  NETWORK
+  OTHER
 }
 
-model Post {
+enum TicketStatus {
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  REVIEW
+  HOLD
+  CANCELED
+  DONE
+}
+
+model User {
   id        Int      @id @default(autoincrement())
-  title     String
-  content   String
+  username  String   @unique
+  email     String   @unique
+  name      String?
+  phone     String?
+  password  String
   createdAt DateTime @default(now())
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
+
+  ticketsAuthored Ticket[] @relation("TicketsAuthored")
+  ticketsAssigned Ticket[] @relation("TicketsAssigned")
+}
+
+model Ticket {
+  id        Int          @id @default(autoincrement())
+  type      TicketType   @default(OTHER)
+  status    TicketStatus @default(NEW)
+  title     String
+  content   String?
+  views     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  authorId   Int
+  author     User @relation("TicketsAuthored", fields: [authorId], references: [id])
+
+  assigneeId Int?
+  assignee   User? @relation("TicketsAssigned", fields: [assigneeId], references: [id])
 }

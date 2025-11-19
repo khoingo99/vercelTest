@@ -1,175 +1,332 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import styles from "../ui/ui.module.css";
+
+const STATUS_KO = {
+  NEW: "대기",
+  ASSIGNED: "담당자배정",
+  IN_PROGRESS: "진행",
+  REVIEW: "확인요청",
+  HOLD: "보류",
+  CANCELED: "취소",
+  DONE: "완료",
+};
+
+const TYPE_KO = {
+  SERVER: "서버",
+  CAMERA: "카메라",
+  LIGHT: "조명",
+  NETWORK: "네트워크",
+  OTHER: "기타",
+};
+
+function buildPages(current, totalPages, max) {
+  totalPages = Math.max(1, totalPages);
+  const half = Math.floor(max / 2);
+  let start = Math.max(1, current - half);
+  let end = Math.min(totalPages, start + max - 1);
+  start = Math.max(1, end - max + 1);
+  const arr = [];
+  for (let i = start; i <= end; i++) arr.push(i);
+  return arr;
+}
 
 export default function HomePage() {
   const router = useRouter();
-  const [posts, setPosts] = useState([]);
-  const [userEmail, setUserEmail] = useState('');
-  const [userName, setUserName] = useState('');
+  const [page, setPage] = useState(1);
+  const size = 10;
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({
+    NEW: 0,
+    ASSIGNED: 0,
+    IN_PROGRESS: 0,
+    REVIEW: 0,
+    HOLD: 0,
+    CANCELED: 0,
+    DONE: 0,
+  });
   const [loading, setLoading] = useState(true);
+  const [errMsg, setErrMsg] = useState(null);
 
   useEffect(() => {
-    const email = localStorage.getItem('userEmail');
-    const name = localStorage.getItem('userName');
+    const username = localStorage.getItem("username");
+    if (!username) router.replace("/");
+  }, [router]);
 
-    if (!email) {
-      router.push('/');
-      return;
-    }
+  useEffect(() => {
+    let aborted = false;
 
-    setUserEmail(email);
-    setUserName(name || email);
-
-    async function fetchPosts() {
+    async function load() {
       try {
-        const res = await fetch(`/api/posts?email=${encodeURIComponent(email)}`);
-        const data = await res.json();
-        if (res.ok && data.success) {
-          setPosts(data.posts);
-        } else {
-          console.error(data.message);
+        setLoading(true);
+        setErrMsg(null);
+        const res = await fetch(`/api/tickets?page=${page}&size=${size}`);
+        const json = await res.json();
+
+        if (!res.ok || json.ok === false) {
+          throw new Error(json.message || "API error");
         }
-      } catch (err) {
-        console.error(err);
+
+        const d = json.data || {};
+        const items = Array.isArray(d.items) ? d.items : [];
+
+        const mapped = items.map((t) => ({
+          id: t.id,
+          type: TYPE_KO[t.type || "OTHER"] || "기타",
+          status: STATUS_KO[t.status || "NEW"] || "대기",
+          title: t.title || "-",
+          author: (t.author && (t.author.name || t.author.username)) || "-",
+          assignee:
+            t.assignee && (t.assignee.name || t.assignee.username) || "-",
+          date: t.createdAt
+            ? new Date(t.createdAt).toLocaleDateString("ko-KR")
+            : "",
+          views: t.views || 0,
+        }));
+
+        const sm = Object.assign(
+          {
+            NEW: 0,
+            ASSIGNED: 0,
+            IN_PROGRESS: 0,
+            REVIEW: 0,
+            HOLD: 0,
+            CANCELED: 0,
+            DONE: 0,
+          },
+          d.summary || {}
+        );
+
+        if (!aborted) {
+          setRows(mapped);
+          setTotal(d.total || 0);
+          setSummary(sm);
+        }
+      } catch (e) {
+        if (!aborted) setErrMsg(e.message || "불러오기 실패");
       } finally {
-        setLoading(false);
+        if (!aborted) setLoading(false);
       }
     }
 
-    fetchPosts();
-  }, [router]);
+    load();
+    return () => {
+      aborted = true;
+    };
+  }, [page, size]);
 
-  function handleLogout() {
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    router.push('/');
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(total / size)),
+    [total, size]
+  );
+  const pages = useMemo(
+    () => buildPages(page, totalPages, 7),
+    [page, totalPages]
+  );
+
+  const stats = [
+    { label: "대기 업무", value: summary.NEW, icon: "🕒", cls: styles.icoWait },
+    {
+      label: "담당자 배정",
+      value: summary.ASSIGNED,
+      icon: "📝",
+      cls: styles.icoAssign,
+    },
+    {
+      label: "처리 중인 업무",
+      value: summary.IN_PROGRESS,
+      icon: "🏃",
+      cls: styles.icoProgress,
+    },
+    {
+      label: "확인요청",
+      value: summary.REVIEW,
+      icon: "✨",
+      cls: styles.icoCheckReq,
+    },
+    { label: "보류", value: summary.HOLD, icon: "📂", cls: styles.icoHold },
+    {
+      label: "취소",
+      value: summary.CANCELED,
+      icon: "⛔",
+      cls: styles.icoCancel,
+    },
+    { label: "완료", value: summary.DONE, icon: "✅", cls: styles.icoDone },
+    { label: "전체", value: total, icon: "📈", cls: styles.icoAll },
+  ];
+
+  function logout() {
+    localStorage.clear();
+    router.push("/signin");
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header
-        style={{
-          padding: '12px 24px',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: '#ffffff',
-        }}
-      >
-        <div>
-          <strong>Blog Dashboard</strong>
+    <div className={styles.main_shell}>
+      <header className={styles.main_topbar}>
+        <div className={styles.main_logoWrap}>
+          <strong>VISION</strong>
         </div>
-        <div>
-          {userName && (
-            <span style={{ marginRight: 12, fontSize: 14 }}>Xin chào, {userName}</span>
-          )}
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 6,
-              border: '1px solid #ef4444',
-              background: '#fee2e2',
-              color: '#b91c1c',
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-          >
-            Đăng xuất
+        <nav className={styles.main_topLinks}>
+          <button className={styles.main_link} type="button">
+            회원 정보 수정
           </button>
-        </div>
+          <button className={styles.main_link} type="button" onClick={logout}>
+            로그아웃
+          </button>
+        </nav>
       </header>
 
-      <main style={{ flex: 1, padding: 24 }}>
-        <h2 style={{ marginTop: 0 }}>Danh sách bài viết của bạn</h2>
-        {loading ? (
-          <p>Đang tải...</p>
-        ) : posts.length === 0 ? (
-          <p>Chưa có bài viết nào. (Demo: sau khi đăng ký mình tạo 2 bài mẫu cho bạn)</p>
-        ) : (
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              marginTop: 12,
-              background: '#ffffff',
-              borderRadius: 8,
-              overflow: 'hidden',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
-            }}
+      <main className={styles.main_container}>
+        <div className={styles.main_titleRow}>
+          <h1 className={styles.main_pageTitle}>비전정보통신</h1>
+          <button
+            className={styles.main_writeBtn}
+            onClick={() => router.push("/tickets/new")}
           >
-            <thead style={{ background: '#f9fafb' }}>
-              <tr>
-                <th
-                  style={{
-                    borderBottom: '1px solid #e5e7eb',
-                    textAlign: 'left',
-                    padding: 8,
-                    fontSize: 14,
-                  }}
-                >
-                  #
-                </th>
-                <th
-                  style={{
-                    borderBottom: '1px solid #e5e7eb',
-                    textAlign: 'left',
-                    padding: 8,
-                    fontSize: 14,
-                  }}
-                >
-                  Tiêu đề
-                </th>
-                <th
-                  style={{
-                    borderBottom: '1px solid #e5e7eb',
-                    textAlign: 'left',
-                    padding: 8,
-                    fontSize: 14,
-                  }}
-                >
-                  Ngày tạo
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((p, idx) => (
-                <tr key={p.id}>
-                  <td
-                    style={{
-                      borderBottom: '1px solid #f3f4f6',
-                      padding: 8,
-                      fontSize: 14,
-                    }}
+            작성하기
+          </button>
+        </div>
+
+        <section className={styles.main_statsCard}>
+          {stats.map((x) => (
+            <div key={x.label} className={styles.main_statItem}>
+              <div className={`${styles.main_statIcon} ${x.cls}`}>{x.icon}</div>
+              <div className={styles.main_statMeta}>
+                <div className={styles.main_statLabel}>{x.label}</div>
+                <div className={styles.main_statValueRow}>
+                  <span className={styles.main_statValue}>{x.value}</span>
+                  <span className={styles.main_statUnit}>건</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <section className={styles.main_card}>
+          <div className={styles.main_toolbar}>
+            <div className={styles.main_filters}>
+              <select className={styles.main_select}>
+                <option>정렬순서 선택</option>
+              </select>
+              <select className={styles.main_select}>
+                <option>요청상태 선택</option>
+              </select>
+              <input
+                className={styles.main_titleInput}
+                placeholder="제목"
+                readOnly
+              />
+              <div className={styles.main_searchBox}>
+                <input
+                  className={styles.main_keyword}
+                  placeholder="검색어를 입력하세요"
+                  readOnly
+                />
+                <button className={styles.main_searchBtn}>검색</button>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.main_tableWrap}>
+            {loading ? (
+              <div className={styles.main_loading}>불러오는 중…</div>
+            ) : errMsg ? (
+              <div className={styles.main_error}>오류: {errMsg}</div>
+            ) : (
+              <table className={styles.main_table}>
+                <thead>
+                  <tr>
+                    <th className={styles.main_colNo}>번호</th>
+                    <th className={styles.main_colType}>요청 구분</th>
+                    <th className={styles.main_colStatus}>요청 상태</th>
+                    <th className={styles.main_colTitle}>제목</th>
+                    <th className={styles.main_colAuthor}>작성자</th>
+                    <th className={styles.main_colAssignee}>담당자</th>
+                    <th className={styles.main_colDate}>작성일</th>
+                    <th className={styles.main_colViews}>조회수</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.id}>
+                      <td>{r.id}</td>
+                      <td>{r.type}</td>
+                      <td>
+                        <span
+                          className={`${styles.badge} ${
+                            styles["st_" + r.status]
+                          }`}
+                        >
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className={styles.main_tdTitle}>
+                        <a href="#">{r.title}</a>
+                      </td>
+                      <td>{r.author}</td>
+                      <td>{r.assignee}</td>
+                      <td>{r.date}</td>
+                      <td>{r.views}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className={styles.main_pagination}>
+            {totalPages === 1 ? (
+              <button className={styles.pageCurrent}>1</button>
+            ) : (
+              <>
+                {pages[0] > 1 && (
+                  <>
+                    <button
+                      className={
+                        page === 1 ? styles.pageCurrent : styles.pageBtn
+                      }
+                      onClick={() => setPage(1)}
+                    >
+                      1
+                    </button>
+                    <span className={styles.ellipsis}>…</span>
+                  </>
+                )}
+
+                {pages.map((p) => (
+                  <button
+                    key={p}
+                    className={
+                      p === page ? styles.pageCurrent : styles.pageBtn
+                    }
+                    onClick={() => setPage(p)}
                   >
-                    {idx + 1}
-                  </td>
-                  <td
-                    style={{
-                      borderBottom: '1px solid #f3f4f6',
-                      padding: 8,
-                      fontSize: 14,
-                    }}
-                  >
-                    {p.title}
-                  </td>
-                  <td
-                    style={{
-                      borderBottom: '1px solid #f3f4f6',
-                      padding: 8,
-                      fontSize: 14,
-                    }}
-                  >
-                    {new Date(p.createdAt).toLocaleString('vi-VN')}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                    {p}
+                  </button>
+                ))}
+
+                {pages[pages.length - 1] < totalPages && (
+                  <>
+                    <span className={styles.ellipsis}>…</span>
+                    <button
+                      className={
+                        page === totalPages
+                          ? styles.pageCurrent
+                          : styles.pageBtn
+                      }
+                      onClick={() => setPage(totalPages)}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

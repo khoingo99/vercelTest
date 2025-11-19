@@ -1,118 +1,107 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import styles from "./ui/ui.module.css";
 
-export default function LoginPage() {
+export default function SignInPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('demo@example.com');
-  const [password, setPassword] = useState('123456');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
-  async function handleSubmit(e) {
+  useEffect(() => {
+    const u = localStorage.getItem("username");
+    if (u) router.replace("/");
+  }, [router]);
+
+  async function onSubmit(e) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Đăng nhập thất bại');
+        setError(data.message || "로그인에 실패했습니다.");
+        return;
       }
 
-      localStorage.setItem('userEmail', data.user.email);
-      localStorage.setItem('userName', data.user.name);
+      localStorage.setItem("userId", String(data.user.id));
+      localStorage.setItem("username", data.user.username);
+      if (data.user.name) localStorage.setItem("name", data.user.name);
+      console.log("remember:", remember);
 
-      router.push('/home');
+      router.push("/home");
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError("에러가 발생했습니다.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex' }}>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          margin: 'auto',
-          padding: 24,
-          borderRadius: 12,
-          background: '#ffffff',
-          width: 340,
-          boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
-        }}
-      >
-        <h1 style={{ marginBottom: 4 }}>Đăng nhập</h1>
-        <p style={{ marginTop: 0, marginBottom: 16, fontSize: 14, color: '#666' }}>
-          Demo Next.js + Prisma + Neon
-        </p>
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 14 }}>Email</label>
+    <main className={styles.login_shell}>
+      <form className={styles.login_card} onSubmit={onSubmit}>
+        <h1 className={styles.login_title}>장애 모니터링 로그인</h1>
+        <p className={styles.login_sub}>비전정보통신 내부용 티켓 시스템</p>
+
+        <div className={styles.login_field}>
           <input
-            style={{ width: '100%', padding: 8, marginTop: 4, borderRadius: 6, border: '1px solid #ddd' }}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
+            className={styles.login_input}
+            placeholder="아이디"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
         </div>
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 14 }}>Mật khẩu</label>
+
+        <div className={styles.login_field}>
           <input
-            style={{ width: '100%', padding: 8, marginTop: 4, borderRadius: 6, border: '1px solid #ddd' }}
+            className={styles.login_input}
+            placeholder="비밀번호"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            type="password"
             required
           />
         </div>
-        {error && <p style={{ color: 'red', fontSize: 14 }}>{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: 10,
-            marginTop: 8,
-            borderRadius: 6,
-            border: 'none',
-            background: '#2563eb',
-            color: '#fff',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+
+        <div className={styles.login_options}>
+          <label>
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />{" "}
+            자동로그인
+          </label>
+        </div>
+
+        <button className={styles.login_submit} disabled={loading}>
+          {loading ? "로그인 중…" : "로그인"}
         </button>
-        <button
-          type="button"
-          onClick={() => router.push('/register')}
-          style={{
-            width: '100%',
-            padding: 10,
-            marginTop: 8,
-            borderRadius: 6,
-            border: '1px solid #ddd',
-            background: '#f9fafb',
-            cursor: 'pointer',
-            fontSize: 14,
-          }}
-        >
-          Chưa có tài khoản? Đăng ký
-        </button>
-        <p style={{ fontSize: 12, marginTop: 12, color: '#777' }}>
-          Tip: Sau khi migrate bạn có thể đăng ký user mới để test.
+
+        {error && <p className={styles.login_error}>{error}</p>}
+
+        <div className={styles.login_linkRow}>
+          아직 가입전이신가요?{" "}
+          <a href="/register">회원가입</a>
+        </div>
+
+        <p className={styles.login_footer}>
+          Copyright © (주)비전정보통신 All Rights Reserved.
         </p>
       </form>
-    </div>
+    </main>
   );
 }
