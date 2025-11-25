@@ -7,23 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum TicketType {
-  SERVER
-  CAMERA
-  LIGHT
-  NETWORK
-  OTHER
-}
-
 enum TicketStatus {
   NEW
-  ASSIGNED
   IN_PROGRESS
-  REVIEW
-  HOLD
-  CANCELED
   DONE
+  CANCELED
 }
+
 
 model User {
   id        Int      @id @default(autoincrement())
@@ -32,18 +22,20 @@ model User {
   name      String?
   phone     String?
   password  String
+  department String?   // optional
+  position   String?   // optional
   createdAt DateTime @default(now())
 
   ticketsAuthored Ticket[] @relation("TicketsAuthored")
-  ticketsAssigned Ticket[] @relation("TicketsAssigned")
 }
 
 model Ticket {
   id        Int          @id @default(autoincrement())
-  type      TicketType   @default(OTHER)
-  status    TicketStatus @default(NEW)
-  title     String
-  content   String?
+  title        String
+  category     String
+  assigneeName String?
+  status       TicketStatus @default(NEW)
+  content      String
   views     Int          @default(0)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -51,6 +43,17 @@ model Ticket {
   authorId   Int
   author     User @relation("TicketsAuthored", fields: [authorId], references: [id])
 
-  assigneeId Int?
-  assignee   User? @relation("TicketsAssigned", fields: [assigneeId], references: [id])
+  files TicketFile[]  // 👈 quan hệ 1-n với file
+}
+model TicketFile {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+
+  filename  String
+  mimeType  String
+  size      Int      // bytes
+  data      Bytes    // binary file
+
+  createdAt DateTime @default(now())
 }

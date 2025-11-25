@@ -11,10 +11,11 @@ export default function SignInPage() {
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
 
   useEffect(() => {
     const u = localStorage.getItem("username");
-    if (u) router.replace("/");
+    if (u) router.replace("/home");
   }, [router]);
 
   async function onSubmit(e) {
@@ -49,59 +50,80 @@ export default function SignInPage() {
     }
   }
 
-  return (
-    <main className={styles.login_shell}>
-      <form className={styles.login_card} onSubmit={onSubmit}>
-        <h1 className={styles.login_title}>장애 모니터링 로그인</h1>
-        <p className={styles.login_sub}>비전정보통신 내부용 티켓 시스템</p>
+   return (
+    <main className={styles.container}>
+      <h1 className={styles.title}>장애 모니터링 로그인</h1>
 
-        <div className={styles.login_field}>
+      <form onSubmit={onSubmit} className={styles.form} aria-label="로그인">
+        {/* 아이디 */}
+        <div className={styles.field}>
           <input
-            className={styles.login_input}
+            className={styles.input}
             placeholder="아이디"
+            type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            aria-label="아이디"
             required
           />
+          {username && (
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={() => setUsername("")}
+              aria-label="지우기"
+            >
+              ×
+            </button>
+          )}
         </div>
 
-        <div className={styles.login_field}>
+        {/* 비밀번호 */}
+        <div className={styles.field}>
           <input
-            className={styles.login_input}
+            className={styles.input}
             placeholder="비밀번호"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            aria-label="비밀번호"
             required
           />
         </div>
 
-        <div className={styles.login_options}>
-          <label>
+        {/* 자동로그인 */}
+        <div className={styles.optionRow}>
+          <label className={styles.check}>
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-            />{" "}
-            자동로그인
+            />
+            <span>자동로그인</span>
           </label>
+          <span />
         </div>
 
-        <button className={styles.login_submit} disabled={loading}>
+        {/* 버튼 로그인 */}
+        <button className={styles.submit} disabled={loading}>
           {loading ? "로그인 중…" : "로그인"}
         </button>
 
-        {error && <p className={styles.login_error}>{error}</p>}
+        {/* lỗi */}
+        {error && <p className={styles.error}>{error}</p>}
 
-        <div className={styles.login_linkRow}>
-          아직 가입전이신가요?{" "}
-          <a href="/register">회원가입</a>
+        {/* 회원가입 링크 */}
+        <div className={styles.signupRow}>
+          <span>아직 가입전이신가요?</span>
+          <a href="/register" className={styles.signupLink}>
+            회원가입
+          </a>
         </div>
-
-        <p className={styles.login_footer}>
-          Copyright © (주)비전정보통신 All Rights Reserved.
-        </p>
       </form>
+
+      <footer className={styles.footer}>
+        Copyright © (주)비전정보통신 All Rights Reserved.
+      </footer>
     </main>
   );
 }

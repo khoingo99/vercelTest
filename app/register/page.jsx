@@ -12,6 +12,8 @@ export default function SignUpPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
+  const [department, setDepartment] = useState("");
+  const [position, setPosition] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,14 +31,14 @@ export default function SignUpPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, name, email, phone, password }),
+        body: JSON.stringify({ username, name, email, phone, password,department,position }),
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(data.message || "회원가입에 실패했습니다.");
+      const json = await res.json();
+      if (!res.ok || json.ok === false) {
+        setError(json.message || "회원가입에 실패했습니다.");
         return;
-      }
+     }
 
       // login ngay sau khi register
       const loginRes = await fetch("/api/auth/login", {
@@ -91,22 +93,28 @@ export default function SignUpPage() {
           </div>
         </div>
 
+        {/* 비밀번호 */}
         <div className={styles.signup_row}>
-          <div className={styles.signup_label}>
+          <label className={styles.signup_label}>
             <span className={styles.signup_req} />
             비밀번호
-          </div>
+          </label>
+
           <div className={styles.signup_fieldCol}>
             <input
-              className={styles.signup_input}
               type="password"
+              className={styles.signup_input}
+              placeholder="비밀번호를 입력해주세요"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
             />
+
+            <div className={styles.signup_help}>
+              - 영문자, 숫자, 특수문자 중 임의로 8자에서 16자까지 조합<br/>
+              - 대소문자를 구분하오니 입력시 대소문자의 상태를 확인 하시기 바랍니다.
+            </div>
           </div>
         </div>
-
         <div className={styles.signup_row}>
           <div className={styles.signup_label}>
             <span className={styles.signup_req} />
@@ -115,6 +123,7 @@ export default function SignUpPage() {
           <div className={styles.signup_fieldCol}>
             <input
               className={styles.signup_input}
+              placeholder="비밀번호 확인를 입력해주세요"
               type="password"
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}
@@ -131,6 +140,7 @@ export default function SignUpPage() {
           <div className={styles.signup_fieldCol}>
             <input
               className={styles.signup_input}
+              placeholder="이름를 입력해주세요"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -146,6 +156,7 @@ export default function SignUpPage() {
           <div className={styles.signup_fieldCol}>
             <input
               className={styles.signup_input}
+              placeholder="이메일를 입력해주세요"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -163,12 +174,41 @@ export default function SignUpPage() {
             <input
               className={styles.signup_input}
               type="tel"
+              placeholder="전화번호를 입력해주세요"
               value={phone}
               onChange={(e) =>
-                setPhone(e.target.value.replace(/\D/g, ""))
+                setPhone(e.target.value)
               }
               required
             />
+          </div>
+        </div>
+        {/* 부서 / 직위 */}
+        <div className={styles.signup_row}>
+          <div className={styles.signup_label}>
+            <span className={styles.signup_req} />
+            부서 / 직위
+          </div>
+
+          <div className={styles.signup_fieldRow}>
+            <div className={styles.signup_fieldCol}>
+              <input
+                className={styles.signup_input}
+                placeholder="부서를 입력해주세요"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                required
+              />
+            </div>
+            <div className={styles.signup_fieldCol}>
+              <input
+                className={styles.signup_input}
+                placeholder="직위를 입력해주세요"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                required
+              />
+            </div>
           </div>
         </div>
 

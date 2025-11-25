@@ -3,23 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../ui/ui.module.css";
+import MainHeader from "../components/MainHeader";
 
 const STATUS_KO = {
   NEW: "대기",
-  ASSIGNED: "담당자배정",
-  IN_PROGRESS: "진행",
-  REVIEW: "확인요청",
-  HOLD: "보류",
+  IN_PROGRESS: "처리중",
   CANCELED: "취소",
   DONE: "완료",
-};
-
-const TYPE_KO = {
-  SERVER: "서버",
-  CAMERA: "카메라",
-  LIGHT: "조명",
-  NETWORK: "네트워크",
-  OTHER: "기타",
 };
 
 function buildPages(current, totalPages, max) {
@@ -51,6 +41,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState(null);
 
+  // chưa login thì đá về trang login ("/" của bạn)
   useEffect(() => {
     const username = localStorage.getItem("username");
     if (!username) router.replace("/");
@@ -63,46 +54,56 @@ export default function HomePage() {
       try {
         setLoading(true);
         setErrMsg(null);
-        const res = await fetch(`/api/tickets?page=${page}&size=${size}`);
+
+        const res = await fetch(`/api/tickets?page=${page}&size=${size}`, {
+          cache: "no-store",
+        });
         const json = await res.json();
 
         if (!res.ok || json.ok === false) {
           throw new Error(json.message || "API error");
         }
 
-        const d = json.data || {};
-        const items = Array.isArray(d.items) ? d.items : [];
+        const items = Array.isArray(json.items) ? json.items : [];
 
-        const mapped = items.map((t) => ({
-          id: t.id,
-          type: TYPE_KO[t.type || "OTHER"] || "기타",
-          status: STATUS_KO[t.status || "NEW"] || "대기",
-          title: t.title || "-",
-          author: (t.author && (t.author.name || t.author.username)) || "-",
-          assignee:
-            t.assignee && (t.assignee.name || t.assignee.username) || "-",
-          date: t.createdAt
-            ? new Date(t.createdAt).toLocaleDateString("ko-KR")
-            : "",
-          views: t.views || 0,
-        }));
+        // map dữ liệu theo schema mới
+        const mapped = items.map((t) => {
+          const rawStatus = t.status || "NEW";
+          return {
+            id: t.id,
+            type: t.category || "-", // 요청 구분 = category
+            status: STATUS_KO[rawStatus] || "대기", // hiển thị tiếng Hàn
+            rawStatus,
+            title: t.title || "-",
+            author:
+              (t.author && (t.author.name || t.author.username)) || "-",
+            assignee: t.assigneeName || "-", // 담당자 text
+            date: t.createdAt
+              ? new Date(t.createdAt).toLocaleDateString("ko-KR")
+              : "",
+            views: t.views ?? 0, // nếu DB chưa có views thì luôn 0
+          };
+        });
 
-        const sm = Object.assign(
-          {
-            NEW: 0,
-            ASSIGNED: 0,
-            IN_PROGRESS: 0,
-            REVIEW: 0,
-            HOLD: 0,
-            CANCELED: 0,
-            DONE: 0,
-          },
-          d.summary || {}
-        );
+        // tự tính summary từ status
+        const sm = {
+          NEW: 0,
+          ASSIGNED: 0,
+          IN_PROGRESS: 0,
+          REVIEW: 0,
+          HOLD: 0,
+          CANCELED: 0,
+          DONE: 0,
+        };
+
+        items.forEach((t) => {
+          const s = t.status || "NEW";
+          if (sm[s] != null) sm[s] += 1;
+        });
 
         if (!aborted) {
           setRows(mapped);
-          setTotal(d.total || 0);
+          setTotal(json.total || items.length);
           setSummary(sm);
         }
       } catch (e) {
@@ -130,24 +131,11 @@ export default function HomePage() {
   const stats = [
     { label: "대기 업무", value: summary.NEW, icon: "🕒", cls: styles.icoWait },
     {
-      label: "담당자 배정",
-      value: summary.ASSIGNED,
-      icon: "📝",
-      cls: styles.icoAssign,
-    },
-    {
       label: "처리 중인 업무",
       value: summary.IN_PROGRESS,
       icon: "🏃",
       cls: styles.icoProgress,
     },
-    {
-      label: "확인요청",
-      value: summary.REVIEW,
-      icon: "✨",
-      cls: styles.icoCheckReq,
-    },
-    { label: "보류", value: summary.HOLD, icon: "📂", cls: styles.icoHold },
     {
       label: "취소",
       value: summary.CANCELED,
@@ -160,24 +148,12 @@ export default function HomePage() {
 
   function logout() {
     localStorage.clear();
-    router.push("/signin");
+    router.push("/");
   }
 
   return (
     <div className={styles.main_shell}>
-      <header className={styles.main_topbar}>
-        <div className={styles.main_logoWrap}>
-          <strong>VISION</strong>
-        </div>
-        <nav className={styles.main_topLinks}>
-          <button className={styles.main_link} type="button">
-            회원 정보 수정
-          </button>
-          <button className={styles.main_link} type="button" onClick={logout}>
-            로그아웃
-          </button>
-        </nav>
-      </header>
+      <MainHeader />
 
       <main className={styles.main_container}>
         <div className={styles.main_titleRow}>
@@ -211,9 +187,6 @@ export default function HomePage() {
               <select className={styles.main_select}>
                 <option>정렬순서 선택</option>
               </select>
-              <select className={styles.main_select}>
-                <option>요청상태 선택</option>
-              </select>
               <input
                 className={styles.main_titleInput}
                 placeholder="제목"
@@ -240,8 +213,8 @@ export default function HomePage() {
                 <thead>
                   <tr>
                     <th className={styles.main_colNo}>번호</th>
-                    <th className={styles.main_colType}>요청 구분</th>
-                    <th className={styles.main_colStatus}>요청 상태</th>
+                    <th className={styles.main_colType}>업무구분</th>
+                    <th className={styles.main_colStatus}>상태</th>
                     <th className={styles.main_colTitle}>제목</th>
                     <th className={styles.main_colAuthor}>작성자</th>
                     <th className={styles.main_colAssignee}>담당자</th>
@@ -250,28 +223,36 @@ export default function HomePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.id}</td>
-                      <td>{r.type}</td>
-                      <td>
-                        <span
-                          className={`${styles.badge} ${
-                            styles["st_" + r.status]
-                          }`}
-                        >
-                          {r.status}
-                        </span>
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} style={{ textAlign: "center", padding: 20 }}>
+                        등록된 요청이 없습니다.
                       </td>
-                      <td className={styles.main_tdTitle}>
-                        <a href="#">{r.title}</a>
-                      </td>
-                      <td>{r.author}</td>
-                      <td>{r.assignee}</td>
-                      <td>{r.date}</td>
-                      <td>{r.views}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    rows.map((r) => (
+                      <tr key={r.id}>
+                        <td>{r.id}</td>
+                        <td>{r.type}</td>
+                        <td>
+                          <span
+                            className={`${styles.badge} ${
+                              styles["st_" + r.status]
+                            }`}
+                          >
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className={styles.main_tdTitle}>
+                          <a href="#">{r.title}</a>
+                        </td>
+                        <td>{r.author}</td>
+                        <td>{r.assignee}</td>
+                        <td>{r.date}</td>
+                        <td>{r.views}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             )}
@@ -299,9 +280,7 @@ export default function HomePage() {
                 {pages.map((p) => (
                   <button
                     key={p}
-                    className={
-                      p === page ? styles.pageCurrent : styles.pageBtn
-                    }
+                    className={p === page ? styles.pageCurrent : styles.pageBtn}
                     onClick={() => setPage(p)}
                   >
                     {p}

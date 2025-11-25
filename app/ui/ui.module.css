@@ -1,105 +1,186 @@
-/* ===== LOGIN ===== */
-.login_shell {
-  min-height: 100vh;
-  display: flex;
-  background: #f5f7fb;
-}
+.container {
+  --primary: #11a8bf;
+  --primary-dark: #0e91a6;
+  --border: #d6e9ee;
+  --fg: #222;
 
-.login_card {
-  margin: auto;
-  width: 360px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
-  padding: 24px 22px 20px;
-}
-
-.login_title {
-  font-size: 22px;
-  font-weight: 800;
-  margin: 0 0 4px;
-  color: #2f3f4b;
-}
-
-.login_sub {
-  margin: 0 0 18px;
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-.login_field {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.login_input {
-  width: 100%;
-  height: 44px;
-  border-radius: 8px;
-  border: 1px solid #d5dde7;
-  padding: 0 12px;
+  min-height: 100svh;
+  display: grid;
+  grid-auto-rows: max-content;  /* title + form + footer */
+  justify-items: center;        /* giữa ngang */
+  align-content: center;        /* giữa dọc */
+  gap: 20px;
+  background: #ffffff;
+  padding: 0 16px;              /* padding 2 bên để mobile không dính mép */
   box-sizing: border-box;
-  font-size: 14px;
 }
 
-.login_input:focus {
-  outline: none;
-  border-color: #11a8bf;
-  box-shadow: 0 0 0 2px rgba(17, 168, 191, 0.15);
+/* Tiêu đề: 장애 모니터링 로그인 */
+.title {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 3.6vw, 32px);
+  font-weight: 800;
+  color: #3a3a3a;
+  letter-spacing: -0.02em;
+  text-align: center;
 }
 
-.login_options {
+/* Khối form */
+.form {
+  width: min(520px, 100%);      /* PC ~520px, mobile tự co lại */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 4px 0 10px;
-  font-size: 13px;
-  color: #64748b;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
 }
 
-.login_submit {
+/* Ô input + nút X nằm trong 1 field */
+.field {
+  position: relative;
   width: 100%;
-  height: 44px;
-  border-radius: 8px;
+}
+
+/* Input 아이디 / 비밀번호 */
+.input {
+  width: 100%;
+  height: 52px;
+  border: 2px solid var(--border);
+  background: #eef7ff;
+  color: var(--fg);
+  border-radius: 10px;
+  padding: 0 40px 0 12px;      /* chừa chỗ bên phải cho nút X */
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.input::placeholder {
+  color: #95a6b0;
+}
+
+.input:focus {
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(17, 168, 191, 0.12);
+}
+
+/* nút X clear ở field 아이디 */
+.iconBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   border: none;
-  background: #11a8bf;
-  color: #fff;
-  font-weight: 700;
+  background: #e9f2f5;
+  color: #6f7c84;
+  font-size: 16px;
+  line-height: 26px;
+  text-align: center;
   cursor: pointer;
 }
 
-.login_submit:disabled {
+.iconBtn:hover {
+  background: #dfeef3;
+}
+
+/* dòng "자동로그인" */
+.optionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  font-size: 13px;
+  color: #6e8f99;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.check input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary);
+}
+
+/* nút 로그인 */
+.submit {
+  width: 100%;
+  height: 52px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #04b6ce, #0095b5);
+  margin-top: 4px;
+  transition: background 0.15s ease, transform 0.02s ease,
+    box-shadow 0.15s ease;
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(1.03);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.submit:disabled {
   opacity: 0.7;
   cursor: default;
+  box-shadow: none;
 }
 
-.login_error {
-  margin-top: 10px;
+/* thông báo lỗi dưới nút 로그인 */
+.error {
+  margin: 6px 0 0;
+  color: #c62828;
   font-size: 13px;
-  color: #dc2626;
   text-align: center;
 }
 
-.login_footer {
-  margin-top: 18px;
-  font-size: 12px;
-  color: #9ca3af;
-  text-align: center;
-}
-
-.login_linkRow {
-  margin-top: 10px;
-  text-align: center;
+/* dòng "아직 가입전이신가요?  회원가입" */
+.signupRow {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-size: 13px;
+  color: #6e8f99;
 }
 
-.login_linkRow a {
-  color: #0ea5e9;
+.signupLink {
+  color: #0095b5;
+  font-weight: 600;
   text-decoration: none;
 }
 
-.login_linkRow a:hover {
+.signupLink:hover {
   text-decoration: underline;
+}
+
+/* footer CopyRight ở dưới cùng */
+.footer {
+  position: fixed;      /* luôn dính dưới màn hình */
+  left: 0;
+  right: 0;
+  bottom: 20px;         /* cách mép dưới 16px, muốn sát hẳn thì để 0 */
+  font-size: 11px;
+  color: #9aa9b1;
+  text-align: center;
+  pointer-events: none; /* để không che click ở gần dưới (optional) */
 }
 
 /* ===== SIGNUP ===== */
@@ -127,7 +208,6 @@
   border-radius: 8px;
   padding: 0 24px 18px;
   border: 1px solid var(--border);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
   background: #fff;
 }
 
@@ -222,10 +302,10 @@
 }
 
 .btnPrimary {
+  --primary: #11a8bf;
   border: none;
   background: var(--primary);
   color: #fff;
-  box-shadow: 0 8px 16px rgba(17, 168, 191, 0.18);
 }
 
 .btnPrimary:hover {
@@ -245,6 +325,16 @@
   text-align: center;
   font-size: 13px;
 }
+.signup_fieldRow {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+}
+
+.signup_fieldCol {
+  flex: 1;
+}
+
 
 /* ===== HOME / LIST ===== */
 
@@ -259,10 +349,13 @@
 }
 
 .main_container {
-  width: 1600px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 6px 0 28px;
+  padding: 6px 10px 24px;
+  box-sizing: border-box;
 }
+
 
 .main_topbar {
   height: 56px;
@@ -489,11 +582,13 @@
 }
 
 .main_tableWrap {
-  overflow: auto;
+  overflow-x: auto;      /* ✅ cho phép kéo ngang */
 }
 
+/* Bảng tối thiểu 720px để không quá chật */
 .main_table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
 }
 
@@ -600,8 +695,8 @@
 }
 
 .st_취소 {
-  background: #f8f9fa;
-  color: #8aa1b0;
+  background: #f56e6e;
+  color: #fff;
 }
 
 .main_loading,
@@ -654,10 +749,68 @@
   color: #94a3b8;
 }
 
+.main_statsCard {
+  /* bạn giữ nguyên các thuộc tính cũ, chỉ cần chắc là có cái này */
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+}
+
+/* Tablet: chia 4 cột */
+@media (max-width: 1024px) {
+  .main_statsCard {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    row-gap: 12px;
+  }
+
+  .main_statItem:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* Mobile: chia 2 cột, toolbar xuống 1 cột */
+@media (max-width: 640px) {
+  .main_titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .main_statsCard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .main_topbar {
+    padding: 0 10px;
+  }
+
+  .main_card {
+    padding: 12px;
+  }
+
+  .main_toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .main_filters {
+    flex-wrap: wrap;
+  }
+
+  .main_searchBox {
+    width: 100%;
+  }
+
+  .main_keyword {
+    width: 100%;
+  }
+}
+
 /* ===== TICKET CREATE ===== */
 
 .ticket_shell {
-  padding: 16px 0 32px;
+  padding: 32px 0 32px;
   width: 1000px;
   margin: 0 auto;
 }
@@ -694,12 +847,32 @@
   color: #22313a;
   font-weight: 700;
   padding-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;          /* khoảng cách chấm đỏ với chữ */
 }
+
 
 .ticket_req {
-  color: #e74c3c;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: #d9534f;   /* cùng màu với signup_req */
+  display: inline-block;
+}
+.ticket_fieldRow {
+  display: flex;
+  gap: 8px;
+}
+.btnGhostSmall{
+  border:1px solid #e1e8ee; background:#fff; 
+  border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer;
 }
 
+.ticket_fieldCol {
+  flex: 1;
+  min-width: 0;
+}
 .ticket_field {
   min-width: 0;
 }
@@ -843,6 +1016,8 @@
   background: #f3f7fc;
   border-radius: 8px;
   padding: 10px 14px;
+  font-family: inherit;
+
   font-size: 15px;
   color: #223;
   resize: vertical;
@@ -859,4 +1034,195 @@
   border-color: #11a8bf;
   background: #fff;
   box-shadow: 0 0 0 3px rgba(17, 168, 191, 0.12);
+}
+/* danh sách file dạng grid */
+/* list chung */
+.fileList {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* khi chỉ có 1 file -> căn giữa */
+.fileListSingle {
+  justify-content: center;
+}
+
+/* card mặc định */
+.fileItem {
+  position: relative;
+  width: 240px;             /* kích thước card bình thường */
+  border-radius: 8px;
+  border: 1px solid #e1e7ef;
+  background: #f9fcff;
+  padding: 6px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+}
+
+/* khi chỉ có 1 ảnh: card chiếm nửa chiều ngang container */
+.fileItemSingle {
+  width: 50%;
+  max-width: 420px;         /* có thể chỉnh tuỳ thích */
+}
+
+/* thumbnail luôn vuông */
+.filePreview {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  margin-bottom: 4px;
+}
+
+.filePreview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e1e7ef;
+  display: block;
+}
+
+.fileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fileName {
+  font-size: 13px;
+  color: #22313a;
+  word-break: break-all;
+}
+
+.fileMeta {
+  font-size: 11px;
+  color: #8b9aa7;
+}
+
+/* nút X rõ hơn, tròn đỏ góc phải */
+.fileRemove {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(220, 53, 69, 0.95); /* đỏ */
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fileRemove:hover {
+  background: #c82333;
+}
+
+/* Select box đồng bộ với input */
+.ticket_select {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid #d6e9ee;
+  background: #eef7ff;
+
+  font-size: 15px;
+  color: #22313a;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease,
+    box-shadow 0.15s ease;
+  appearance: none;          /* ẩn style default */
+  
+}
+
+.ticket_select:focus {
+  border-color: #11a8bf;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(17, 168, 191, 0.12);
+}
+/* =====================
+   MAIN HEADER (VISION)
+   ===================== */
+
+.header_wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+
+/* vùng nền trắng */
+.header_shell {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header_inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* logo VISION */
+.header_logo {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #111827;
+  cursor: pointer;
+}
+
+/* phần navigation bên phải */
+.header_nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 13px;
+}
+
+.header_username {
+  color: #4b5563;
+  margin-right: 6px;
+}
+
+/* link 버튼: 회원 정보 수정 / 로그아웃 */
+.header_link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #6b7280;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.header_link:hover {
+  color: #111827;
+  text-decoration: underline;
+}
+
+.header_linkActive {
+  color: #111827;
+  font-weight: 600;
 }

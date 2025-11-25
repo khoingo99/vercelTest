@@ -31,6 +31,7 @@ export async function POST(req) {
         username: user.username,
         email: user.email,
         name: user.name,
+        phone: user.phone
       },
     });
   } catch (err) {

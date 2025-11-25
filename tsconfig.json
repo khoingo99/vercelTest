@@ -29,7 +29,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/dev/types/**/*.ts"
-  ],
+, "app/page.jsx", "app/layout.jsx", "lib/prisma.js"  ],
   "exclude": [
     "node_modules"
   ]
