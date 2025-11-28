@@ -24,22 +24,27 @@ async function ensureUploadDir() {
 export async function GET(req) {
   try {
     const url = new URL(req.url);
-    const search = url.searchParams;
 
-    const page = Math.max(1, Number(search.get("page") || 1));
-    const size = Math.min(50, Math.max(1, Number(search.get("size") || 10)));
+    const page = Math.max(1, Number(url.searchParams.get("page") || 1));
+    const size = Math.min(
+      50,
+      Math.max(1, Number(url.searchParams.get("size") || 10))
+    );
+
+    const status = url.searchParams.get("status") || "ALL";
     const skip = (page - 1) * size;
 
-    const statusParam = search.get("status");
-    const where = {};
-
-    if (statusParam && ALLOWED_STATUS.includes(statusParam)) {
-      where.status = statusParam;
-    }
+    // ✅ điều kiện lọc theo trạng thái (nếu không phải ALL)
+    const where =
+      status !== "ALL"
+        ? {
+            status, // NEW | IN_PROGRESS | DONE | CANCELED
+          }
+        : {};
 
     const [items, total, grouped] = await Promise.all([
       prisma.ticket.findMany({
-        where,
+        where,           // ✅ áp dụng filter
         skip,
         take: size,
         orderBy: { id: "desc" },
@@ -47,18 +52,20 @@ export async function GET(req) {
           author: {
             select: { username: true, name: true },
           },
-          _count: {
-            select: { attachments: true }, // số file đính kèm
-          },
         },
       }),
+
+      // ✅ total sau khi lọc (dùng cho pagination)
       prisma.ticket.count({ where }),
+
+      // ✅ summary cho TOÀN BỘ ticket (không truyền where)
       prisma.ticket.groupBy({
         by: ["status"],
         _count: { _all: true },
       }),
     ]);
 
+    // build summary chung cho 4 ô
     const summary = {
       NEW: 0,
       IN_PROGRESS: 0,
@@ -66,20 +73,19 @@ export async function GET(req) {
       DONE: 0,
     };
 
-    for (const row of grouped) {
-      const s = row.status;
-      if (summary[s] != null) {
-        summary[s] = row._count._all;
+    grouped.forEach((g) => {
+      if (summary[g.status] != null) {
+        summary[g.status] = g._count._all;
       }
-    }
+    });
 
     return NextResponse.json({
       ok: true,
       items,
       page,
       size,
-      total,
-      summary,
+      total,     // ✅ total theo filter
+      summary,   // ✅ tổng toàn bộ ticket
     });
   } catch (err) {
     console.error("Tickets GET error:", err);

@@ -918,6 +918,7 @@
   padding: 18px;
   text-align: center;
   color: #8ea1af;
+  margin-top: 10px;
 }
 
 .dropzoneActive {
@@ -1398,8 +1399,8 @@
 }
 
 .ticketDetail_commentCount {
-  font-size: 12px;
-  color: #9ca3af;
+  font-size: 15px;
+  color:#11a8bf;
 }
 
 .ticketDetail_commentInput {
@@ -1680,3 +1681,33 @@
 }
 
 
+.ticketDetail_commentList {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #eef2f7;
+}
+
+.ticketDetail_commentItem + .ticketDetail_commentItem {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e1e4eb;
+}
+
+.ticketDetail_commentMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #7a7f8c;
+  margin-bottom: 4px;
+}
+
+.ticketDetail_commentAuthor {
+  font-weight: 600;
+}
+
+.ticketDetail_commentBody p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 14px;
+  color: #333;
+}

@@ -26,6 +26,7 @@ model User {
   position   String?   // optional
   createdAt DateTime @default(now())
 
+  comments    Comment[]   // ✅ user có nhiều comment
   ticketsAuthored Ticket[] @relation("TicketsAuthored")
 }
 
@@ -44,6 +45,7 @@ model Ticket {
   author     User @relation("TicketsAuthored", fields: [authorId], references: [id])
 
   attachments Attachment[]
+  comments    Comment[]   // ✅ thêm dòng này
 
 }
 
@@ -57,5 +59,17 @@ model Attachment {
   ticketId  Int
   ticket    Ticket  @relation(fields: [ticketId], references: [id])
 
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+
+  content   String
   createdAt DateTime @default(now())
 }

@@ -43,7 +43,7 @@ export default function HomePage() {
     DONE: 0,
   });
 
-  const [filterStatus, setFilterStatus] = useState("ALL"); // NEW / IN_PROGRESS / CANCELED / DONE / ALL
+  const [filterStatus, setFilterStatus] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState(null);
 
@@ -61,11 +61,18 @@ export default function HomePage() {
         setLoading(true);
         setErrMsg(null);
 
-        const res = await fetch(`/api/tickets?page=${page}&size=${size}`, {
+         const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("size", String(size));
+        if ( filterStatus !== "ALL") {
+          params.set("status", filterStatus); // ✅ gửi status lên API
+        }
+
+        const res = await fetch(`/api/tickets?${params.toString()}`, {
           cache: "no-store",
         });
-        const json = await res.json();
 
+        const json = await res.json();
         if (!res.ok || json.ok === false) {
           throw new Error(json.message || "API error");
         }
@@ -90,25 +97,16 @@ export default function HomePage() {
           };
         });
 
-        // tự tính summary theo status
-        const sm = {
-          NEW: 0,
-          ASSIGNED: 0,
-          IN_PROGRESS: 0,
-          REVIEW: 0,
-          HOLD: 0,
-          CANCELED: 0,
-          DONE: 0,
-        };
-        items.forEach((t) => {
-          const s = t.status || "NEW";
-          if (sm[s] != null) sm[s] += 1;
-        });
-
         if (!aborted) {
           setRows(mapped);
-          setTotal(json.total || items.length);
-          setSummary(sm);
+          setTotal(json.total || 0);        // ✅ total = tổng sau khi lọc
+          const s = json.summary || {};     // ✅ summary global
+          setSummary({
+            NEW: s.NEW ?? 0,
+            IN_PROGRESS: s.IN_PROGRESS ?? 0,
+            CANCELED: s.CANCELED ?? 0,
+            DONE: s.DONE ?? 0,
+          });
         }
       } catch (e) {
         if (!aborted) setErrMsg(e.message || "불러오기 실패");

@@ -23,6 +23,11 @@ export default function TicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
 
+  // ✅ thêm state cho 댓글
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState("");
+  const [postingComment, setPostingComment] = useState(false);
+
   useEffect(() => {
     if (!id) return;
 
@@ -41,6 +46,11 @@ export default function TicketDetailPage() {
         }
 
         if (!aborted) setTicket(json.data);
+
+        if (!aborted) {
+        setTicket(json.data);
+        setComments(json.data.comments || []); // ✅ nhận list comment
+      }
       } catch (e) {
         console.error(e);
         if (!aborted) setErrMsg(e.message || "오류가 발생했습니다.");
@@ -58,7 +68,7 @@ export default function TicketDetailPage() {
   if (loading) {
     return (
       <div className={styles.main_shell}>
-        <FullScreenLoader show={loading} text="로딩 중입니다..." />
+        <FullScreenLoader show={loading} text="로딩중입니다..." />
         <MainHeader />
         <main className={styles.main_container}>
           <div className={styles.main_loading}>불러오는 중…</div>
@@ -101,10 +111,49 @@ export default function TicketDetailPage() {
   );
   // ---------------------------------
 
+  async function handleSubmitComment() {
+    const text = commentText.trim();
+    if (!text) {
+      alert("댓글 내용을 입력하세요.");
+      return;
+    }
+    if (!id) return;
+
+    const username = localStorage.getItem("username"); // giống lúc tạo ticket
+    if (!username) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      setPostingComment(true);
+      const res = await fetch(`/api/tickets/${id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, username }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.ok === false) {
+        alert(json.message || "댓글 등록에 실패했습니다.");
+        return;
+      }
+
+      // ✅ thêm comment mới vào cuối list
+      setComments((prev) => [...prev, json.data]);
+      setCommentText("");
+    } catch (err) {
+      console.error(err);
+      alert("댓글 등록 중 오류가 발생했습니다.");
+    } finally {
+      setPostingComment(false);
+    }
+  }
+
   return (
     <div className={styles.main_shell}>
       <MainHeader />
-
+       <FullScreenLoader show={postingComment} text="댓글 등록중입니다..." />
       <main className={styles.main_container}>
         <div className={styles.ticketDetail_topBar}>
           <div className={styles.ticketDetail_titleWrap}>
@@ -257,12 +306,14 @@ export default function TicketDetailPage() {
         <section className={styles.ticketDetail_commentCard}>
           <div className={styles.ticketDetail_commentHeader}>
             <span>댓글</span>
-            <span className={styles.ticketDetail_commentCount}>0</span>
+            <span className={styles.ticketDetail_commentCount}>{comments.length}</span>
           </div>
           <textarea
             className={styles.ticketTextarea}
+            value={commentText}
             placeholder="댓글을 입력하세요."
             maxLength={1000}
+            onChange={(e) => setCommentText(e.target.value)}
           />
           <div className={styles.ticketDetail_commentFooter}>
             <label className={styles.ticketDetail_mailCheck}>
@@ -272,12 +323,37 @@ export default function TicketDetailPage() {
               <button
                 type="button"
                 className={styles.btnPrimary}
-                onClick={() => alert("댓글 API 아직 안 만들었습니다.")}
+                disabled={postingComment}
+                onClick={handleSubmitComment}
               >
                 댓글 등록
               </button>
             </div>
           </div>
+          {/* 리스트 comment */}
+          {comments.length > 0 && (
+            <ul className={styles.ticketDetail_commentList}>
+              {comments.map((c) => (
+                <li key={c.id} className={styles.ticketDetail_commentItem}>
+                  <div className={styles.ticketDetail_commentMeta}>
+                    <span className={styles.ticketDetail_commentAuthor}>
+                      {c.author?.name || c.author?.username || "알 수 없음"}
+                    </span>
+                    <span className={styles.ticketDetail_commentDate}>
+                      {c.createdAt
+                        ? new Date(c.createdAt).toLocaleString("ko-KR")
+                        : ""}
+                    </span>
+                  </div>
+                  <div className={styles.ticketDetail_commentBody}>
+                    {c.content.split("\n").map((line, idx) => (
+                      <p key={idx}>{line}</p>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </main>
     </div>
