@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "../ui/ui.module.css";
-import FullScreenLoader from "../../components/FullScreenLoader";
+import FullScreenLoader from "../components/FullScreenLoader";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -66,8 +66,8 @@ export default function SignUpPage() {
 
   return (
     <main className={styles.signup_wrap}>
+        <FullScreenLoader show={loading} text="회원가입 중입니다..." />
       <h1 className={styles.signup_title}>회원가입</h1>
-
       <form onSubmit={onSubmit} className={styles.signup_form}>
         <div className={styles.signup_hrTitle}>
           <span className={styles.signup_req} />
@@ -220,7 +220,7 @@ export default function SignUpPage() {
             취소
           </a>
           <button className={styles.btnPrimary} disabled={loading}>
-            {loading ? "처리 중…" : "회원가입"}
+            회원가입
           </button>
         </div>
       </form>

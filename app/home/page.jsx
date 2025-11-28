@@ -217,7 +217,7 @@ export default function HomePage() {
         </section>
 
         <section className={styles.main_card}>
-          <div className={styles.main_toolbar}>
+          {/* <div className={styles.main_toolbar}>
             <div className={styles.main_filters}>
               <select className={styles.main_select}>
                 <option>정렬순서 선택</option>
@@ -236,7 +236,7 @@ export default function HomePage() {
                 <button className={styles.main_searchBtn}>검색</button>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className={styles.main_tableWrap}>
             {loading ? (

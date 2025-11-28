@@ -234,16 +234,16 @@ export default function TicketDetailPage() {
         <section className={styles.ticketDetail_assigneeCard}>
           <div className={styles.ticketDetail_assigneeLabel}>담당자</div>
           <div className={styles.ticketDetail_assigneeBody}>
-            {ticket.assignee ? (
+            {ticket.assigneeName ? (
               <>
                 <span className={styles.ticketDetail_assigneeName}>
-                  {ticket.assignee.name || ticket.assignee.username}
+                  {ticket.assigneeName}
                 </span>
-                {ticket.assignee.phone && (
+                {/* {ticket.assignee.phone && (
                   <span className={styles.ticketDetail_assigneePhone}>
                     ( ☎ {ticket.assignee.phone} )
                   </span>
-                )}
+                )} */}
               </>
             ) : (
               <span className={styles.ticketDetail_noAssignee}>
@@ -260,9 +260,9 @@ export default function TicketDetailPage() {
             <span className={styles.ticketDetail_commentCount}>0</span>
           </div>
           <textarea
-            className={styles.ticketDetail_commentInput}
+            className={styles.ticketTextarea}
             placeholder="댓글을 입력하세요."
-            maxLength={500}
+            maxLength={1000}
           />
           <div className={styles.ticketDetail_commentFooter}>
             <label className={styles.ticketDetail_mailCheck}>
