@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import styles from "../../ui/ui.module.css";
 import MainHeader from "../../components/MainHeader";
+import FullScreenLoader from "../../components/FullScreenLoader";
 
 // Tạo key duy nhất cho 1 file (dùng cho React key)
 const fileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
@@ -141,6 +142,7 @@ export default function TicketCreatePage() {
 
   return (
     <div className={styles.main_shell}>
+      <FullScreenLoader show={submitting} text="등록 중입니다..." />
       <MainHeader />
     <div className={styles.ticket_shell}>
       <form className={styles.ticket_card} onSubmit={handleSubmit}>

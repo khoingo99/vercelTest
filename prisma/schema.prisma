@@ -43,17 +43,19 @@ model Ticket {
   authorId   Int
   author     User @relation("TicketsAuthored", fields: [authorId], references: [id])
 
-  files TicketFile[]  // 👈 quan hệ 1-n với file
-}
-model TicketFile {
-  id        Int      @id @default(autoincrement())
-  ticketId  Int
-  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  attachments Attachment[]
 
-  filename  String
-  mimeType  String
-  size      Int      // bytes
-  data      Bytes    // binary file
+}
+
+model Attachment {
+  id        Int    @id @default(autoincrement())
+  name      String
+  url       String   // "/uploads/xxx.jpg" hoặc URL cloud
+  size      Int
+  mimetype  String
+
+  ticketId  Int
+  ticket    Ticket  @relation(fields: [ticketId], references: [id])
 
   createdAt DateTime @default(now())
 }

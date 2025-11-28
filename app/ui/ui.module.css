@@ -953,13 +953,6 @@
   color: #2f3f4b;
 }
 
-.fileList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  border: 1px solid #e1e8ee;
-  border-radius: 8px;
-}
 
 .fileItem {
   display: flex;
@@ -1205,6 +1198,7 @@
 .header_username {
   color: #4b5563;
   margin-right: 6px;
+  font-weight: bold;
 }
 
 /* link 버튼: 회원 정보 수정 / 로그아웃 */
@@ -1218,7 +1212,7 @@
 }
 
 .header_link:hover {
-  color: #111827;
+  color: #11a8bf;
   text-decoration: underline;
 }
 
@@ -1226,3 +1220,463 @@
   color: #111827;
   font-weight: 600;
 }
+.ticketDetail_topBar {
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.ticketDetail_titleWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticketDetail_badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f97316;
+  color: #fff;
+  font-size: 12px;
+}
+
+.ticketDetail_title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ticketDetail_actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ticketDetail_card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  margin-bottom: 16px;
+}
+
+.ticketDetail_metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.ticketDetail_metaLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-right: 4px;
+}
+
+.ticketDetail_metaValue {
+  font-size: 13px;
+  color: #111827;
+}
+
+.ticketDetail_status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+}
+
+.ticketDetail_body {
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #111827;
+}
+
+.ticketDetail_filesRow {
+  margin-top: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ticketDetail_filesLabel {
+  width: 80px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ticketDetail_filesArea {
+  flex: 1;
+}
+
+.ticketDetail_fileList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ticketDetail_fileItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  font-size: 12px;
+}
+
+.ticketDetail_fileName {
+  font-weight: 500;
+}
+
+.ticketDetail_fileSize {
+  color: #6b7280;
+}
+
+.ticketDetail_noFiles {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* 담당자 card */
+.ticketDetail_assigneeCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  margin-bottom: 16px;
+  display: flex;
+}
+
+.ticketDetail_assigneeLabel {
+  width: 80px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ticketDetail_assigneeBody {
+  flex: 1;
+  font-size: 14px;
+}
+
+.ticketDetail_assigneeName {
+  font-weight: 600;
+}
+
+.ticketDetail_assigneePhone {
+  margin-left: 8px;
+  color: #6b7280;
+}
+
+.ticketDetail_noAssignee {
+  color: #9ca3af;
+}
+
+/* 댓글 card */
+.ticketDetail_commentCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 24px 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  margin-bottom: 24px;
+}
+
+.ticketDetail_commentHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ticketDetail_commentCount {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.ticketDetail_commentInput {
+  width: 100%;
+  min-height: 140px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 8px 10px;
+  resize: vertical;
+  font-size: 14px;
+}
+
+.ticketDetail_commentFooter {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticketDetail_mailCheck {
+  font-size: 13px;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ticketDetail_commentRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticketDetail_commentLen {
+  font-size: 12px;
+  color: #9ca3af;
+}
+.main_rowClickable {
+  cursor: pointer;
+}
+
+.main_rowClickable:hover {
+  background-color: #f9fafb;
+}
+
+
+/* ===== FULL SCREEN LOADER ===== */
+.fsLoader_backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* cao hơn header, modal khác */
+}
+
+.fsLoader_box {
+  background: #ffffff;
+  padding: 24px 32px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+}
+
+.fsLoader_spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid #e4f4ff;
+  border-top-color: #00aacc;
+  animation: fsLoaderSpin 0.7s linear infinite;
+}
+
+.fsLoader_text {
+  font-size: 14px;
+  color: #333;
+}
+
+@keyframes fsLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ===== HOME: STAT CARDS (대기/처리중/취소/완료/전체) ===== */
+
+.main_statsCard {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); /* chia đều 5 ô */
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* mỗi item là 1 ô trạng thái */
+.main_statItem {
+  display: flex;
+  flex-direction: column;          /* icon trên, text dưới */
+  align-items: center;             /* căn giữa ngang */
+  justify-content: center;         /* căn giữa dọc */
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.main_statItem:hover {
+  border-color: #22c55e33;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+  transform: translateY(-1px);
+}
+
+/* ô đang được chọn */
+.main_statItemActive {
+  border-color: #36b5ff;
+  background: #e8f7ff;
+}
+
+/* icon tròn phía trên */
+.main_statIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+/* khối text bên dưới icon */
+.main_statMeta {
+  text-align: center; /* căn giữa text */
+}
+
+.main_statLabel {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.main_statValueRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.main_statValue {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: #111827;
+}
+
+.main_statUnit {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* ===== màu text khi ô được chọn ===== */
+.main_statItemActive .main_statLabel,
+.main_statItemActive .main_statValue {
+  color: #059669;  /* xanh lá nhấn */
+}
+
+.main_statItemActive .main_statUnit {
+  color: #10b981;
+}
+
+/* ===== PROFILE MODAL ===== */
+
+.profile_modal_backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.profile_modal {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.25);
+}
+
+.profile_modal_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.profile_modal_title {
+  
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  
+}
+
+.profile_modal_closeBtn {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.profile_modal_row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.profile_modal_label {
+  font-size: 13px;
+  color: #374151;
+}
+
+.profile_modal_input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.profile_modal_input:focus {
+  outline: none;
+  border-color: #36b5ff;
+  box-shadow: 0 0 0 1px #36b5ff33;
+}
+
+.profile_modal_input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.profile_modal_help {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.profile_modal_actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.profile_modal_error {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #ef4444;
+}
+
+.profile_modal_success {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #16a34a;
+}
+
+

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./ui/ui.module.css";
+import FullScreenLoader from "./components/FullScreenLoader";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -52,8 +53,8 @@ export default function SignInPage() {
 
    return (
     <main className={styles.container}>
+      <FullScreenLoader show={loading} text="등록 중입니다..." />
       <h1 className={styles.title}>장애 모니터링 로그인</h1>
-
       <form onSubmit={onSubmit} className={styles.form} aria-label="로그인">
         {/* 아이디 */}
         <div className={styles.field}>

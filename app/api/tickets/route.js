@@ -1,16 +1,45 @@
+// app/api/tickets/route.js
 import { NextResponse } from "next/server";
 import prisma from "../../../lib/prisma";
+import fs from "fs/promises";
+import path from "path";
 
-// GET /api/tickets?page=1&size=10
+// Các trạng thái cho phép
+const ALLOWED_STATUS = ["NEW", "IN_PROGRESS", "DONE", "CANCELED"];
+
+// Thư mục upload trong /public/uploads
+const uploadDir = path.join(process.cwd(), "public", "uploads");
+
+async function ensureUploadDir() {
+  try {
+    await fs.mkdir(uploadDir, { recursive: true });
+  } catch (e) {
+    // nếu đã tồn tại thì bỏ qua
+  }
+}
+
+/**
+ * GET /api/tickets?page=1&size=10&status=NEW
+ */
 export async function GET(req) {
   try {
     const url = new URL(req.url);
-    const page = Math.max(1, Number(url.searchParams.get("page") || 1));
-    const size = Math.min(50, Math.max(1, Number(url.searchParams.get("size") || 10)));
+    const search = url.searchParams;
+
+    const page = Math.max(1, Number(search.get("page") || 1));
+    const size = Math.min(50, Math.max(1, Number(search.get("size") || 10)));
     const skip = (page - 1) * size;
 
-    const [items, total] = await Promise.all([
+    const statusParam = search.get("status");
+    const where = {};
+
+    if (statusParam && ALLOWED_STATUS.includes(statusParam)) {
+      where.status = statusParam;
+    }
+
+    const [items, total, grouped] = await Promise.all([
       prisma.ticket.findMany({
+        where,
         skip,
         take: size,
         orderBy: { id: "desc" },
@@ -19,12 +48,30 @@ export async function GET(req) {
             select: { username: true, name: true },
           },
           _count: {
-            select: { files: true },   // để biết có bao nhiêu file đính kèm
+            select: { attachments: true }, // số file đính kèm
           },
         },
       }),
-      prisma.ticket.count(),
+      prisma.ticket.count({ where }),
+      prisma.ticket.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
     ]);
+
+    const summary = {
+      NEW: 0,
+      IN_PROGRESS: 0,
+      CANCELED: 0,
+      DONE: 0,
+    };
+
+    for (const row of grouped) {
+      const s = row.status;
+      if (summary[s] != null) {
+        summary[s] = row._count._all;
+      }
+    }
 
     return NextResponse.json({
       ok: true,
@@ -32,19 +79,25 @@ export async function GET(req) {
       page,
       size,
       total,
+      summary,
     });
   } catch (err) {
     console.error("Tickets GET error:", err);
     return NextResponse.json(
       { ok: false, message: "목록 조회에 실패했습니다." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
-// POST /api/tickets  (FormData)
-const ALLOWED_STATUS = ["NEW", "IN_PROGRESS", "DONE", "CANCELED"];
-
+/**
+ * POST /api/tickets
+ * Body: FormData
+ *  - title, category, content, authorUsername
+ *  - assigneeUsername (optional)
+ *  - status (NEW / IN_PROGRESS / DONE / CANCELED, optional)
+ *  - files: nhiều file
+ */
 export async function POST(req) {
   try {
     const form = await req.formData();
@@ -53,36 +106,34 @@ export async function POST(req) {
     const category = String(form.get("category") || "").trim();
     const content = String(form.get("content") || "").trim();
     const authorUsername = String(form.get("authorUsername") || "").trim();
+    const assigneeUsername = String(
+      form.get("assigneeUsername") || ""
+    ).trim();
 
-    const assigneeName = String(form.get("assigneeUsername") || "").trim();
     let status = String(form.get("status") || "NEW").trim();
-
     if (!ALLOWED_STATUS.includes(status)) {
       status = "NEW";
     }
 
-    // validate
+    // ---- validate ----
     if (!title) {
       return NextResponse.json(
         { ok: false, message: "제목은 필수입니다." },
         { status: 400 }
       );
     }
-
     if (!category) {
       return NextResponse.json(
         { ok: false, message: "업무 구분은 필수입니다." },
         { status: 400 }
       );
     }
-
     if (!content) {
       return NextResponse.json(
         { ok: false, message: "내용은 필수입니다." },
         { status: 400 }
       );
     }
-
     if (!authorUsername) {
       return NextResponse.json(
         { ok: false, message: "로그인 정보가 필요합니다." },
@@ -100,11 +151,45 @@ export async function POST(req) {
         { status: 404 }
       );
     }
+    // ------------------
 
-    // lấy tất cả files từ FormData
+    await ensureUploadDir();
+
     const files = form.getAll("files").filter(Boolean);
 
-    // tạo ticket trước
+    // chuẩn bị data attachments để create
+    const attachmentsData = [];
+
+    for (const f of files) {
+      // f là instance File
+      const arrayBuf = await f.arrayBuffer();
+      const buffer = Buffer.from(arrayBuf);
+
+      // tên file an toàn
+      const safeOriginalName = (f.name || "file").replace(
+        /[^a-zA-Z0-9.\-_]/g,
+        "_"
+      );
+      const filename =
+        Date.now().toString() +
+        "_" +
+        Math.random().toString(36).slice(2, 8) +
+        "_" +
+        safeOriginalName;
+
+      const filePath = path.join(uploadDir, filename);
+      await fs.writeFile(filePath, buffer);
+
+      const url = "/uploads/" + filename; // đường dẫn public
+
+      attachmentsData.push({
+        name: f.name || safeOriginalName,
+        url,
+        size: typeof f.size === "number" ? f.size : buffer.length,
+        mimetype: f.type || "application/octet-stream",
+      });
+    }
+
     const ticket = await prisma.ticket.create({
       data: {
         title,
@@ -112,31 +197,16 @@ export async function POST(req) {
         content,
         status,
         authorId: author.id,
-        assigneeName: assigneeName || null,
+        assigneeName: assigneeUsername || null,
+        attachments:
+          attachmentsData.length > 0
+            ? { create: attachmentsData }
+            : undefined,
+      },
+      include: {
+        attachments: true,
       },
     });
-
-    // lưu file (nếu có)
-    if (files.length > 0) {
-      const fileCreates = await Promise.all(
-        files.map(async (f) => {
-          // f là instance của File
-          const arrayBuf = await f.arrayBuffer();
-          const buffer = Buffer.from(arrayBuf);
-
-          return prisma.ticketFile.create({
-            data: {
-              ticketId: ticket.id,
-              filename: f.name,
-              mimeType: f.type || "application/octet-stream",
-              size: f.size,
-              data: buffer,
-            },
-          });
-        })
-      );
-      // có thể trả kèm fileCreates nếu cần
-    }
 
     return NextResponse.json({ ok: true, ticket });
   } catch (err) {

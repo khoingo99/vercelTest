@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "../ui/ui.module.css";
+import FullScreenLoader from "../../components/FullScreenLoader";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -87,7 +88,7 @@ export default function SignUpPage() {
               required
             />
             <div className={styles.signup_help}>
-              ID는 4~16자의 영문자나 숫자를 조합하여 만들 수 있으며, 한글이나
+              - ID는 4~16자의 영문자나 숫자를 조합하여 만들 수 있으며, 한글이나
               특수문자 등은 사용할 수 없습니다.
             </div>
           </div>

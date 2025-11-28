@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../ui/ui.module.css";
 import MainHeader from "../components/MainHeader";
+import FullScreenLoader from "../components/FullScreenLoader";
 
 const STATUS_KO = {
   NEW: "대기",
@@ -25,10 +26,13 @@ function buildPages(current, totalPages, max) {
 
 export default function HomePage() {
   const router = useRouter();
+
   const [page, setPage] = useState(1);
   const size = 10;
-  const [rows, setRows] = useState([]);
-  const [total, setTotal] = useState(0);
+
+  const [rows, setRows] = useState([]);        // tất cả ticket trên page hiện tại
+  const [total, setTotal] = useState(0);       // tổng số ticket (tất cả page)
+
   const [summary, setSummary] = useState({
     NEW: 0,
     ASSIGNED: 0,
@@ -38,10 +42,12 @@ export default function HomePage() {
     CANCELED: 0,
     DONE: 0,
   });
+
+  const [filterStatus, setFilterStatus] = useState("ALL"); // NEW / IN_PROGRESS / CANCELED / DONE / ALL
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState(null);
 
-  // chưa login thì đá về trang login ("/" của bạn)
+  // nếu chưa login -> đá về trang login ("/")
   useEffect(() => {
     const username = localStorage.getItem("username");
     if (!username) router.replace("/");
@@ -66,26 +72,25 @@ export default function HomePage() {
 
         const items = Array.isArray(json.items) ? json.items : [];
 
-        // map dữ liệu theo schema mới
         const mapped = items.map((t) => {
           const rawStatus = t.status || "NEW";
           return {
             id: t.id,
-            type: t.category || "-", // 요청 구분 = category
-            status: STATUS_KO[rawStatus] || "대기", // hiển thị tiếng Hàn
+            type: t.category || "-",
+            status: STATUS_KO[rawStatus] || "대기",
             rawStatus,
             title: t.title || "-",
             author:
               (t.author && (t.author.name || t.author.username)) || "-",
-            assignee: t.assigneeName || "-", // 담당자 text
+            assignee: t.assigneeName || "-",
             date: t.createdAt
               ? new Date(t.createdAt).toLocaleDateString("ko-KR")
               : "",
-            views: t.views ?? 0, // nếu DB chưa có views thì luôn 0
+            views: t.views ?? 0,
           };
         });
 
-        // tự tính summary từ status
+        // tự tính summary theo status
         const sm = {
           NEW: 0,
           ASSIGNED: 0,
@@ -95,7 +100,6 @@ export default function HomePage() {
           CANCELED: 0,
           DONE: 0,
         };
-
         items.forEach((t) => {
           const s = t.status || "NEW";
           if (sm[s] != null) sm[s] += 1;
@@ -119,6 +123,12 @@ export default function HomePage() {
     };
   }, [page, size]);
 
+  // danh sách rows sau khi lọc theo trạng thái
+  const rowsView = useMemo(() => {
+    if (filterStatus === "ALL") return rows;
+    return rows.filter((r) => r.rawStatus === filterStatus);
+  }, [rows, filterStatus]);
+
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(total / size)),
     [total, size]
@@ -128,33 +138,48 @@ export default function HomePage() {
     [page, totalPages]
   );
 
+  // dữ liệu cho 4 ô trạng thái + 1 ô 전체
   const stats = [
-    { label: "대기 업무", value: summary.NEW, icon: "🕒", cls: styles.icoWait },
     {
+      key: "NEW",
+      label: "대기 업무",
+      value: summary.NEW,
+      icon: "🕒",
+      cls: styles.icoWait,
+    },
+    {
+      key: "IN_PROGRESS",
       label: "처리 중인 업무",
       value: summary.IN_PROGRESS,
       icon: "🏃",
       cls: styles.icoProgress,
     },
     {
+      key: "CANCELED",
       label: "취소",
       value: summary.CANCELED,
       icon: "⛔",
       cls: styles.icoCancel,
     },
-    { label: "완료", value: summary.DONE, icon: "✅", cls: styles.icoDone },
-    { label: "전체", value: total, icon: "📈", cls: styles.icoAll },
+    {
+      key: "DONE",
+      label: "완료",
+      value: summary.DONE,
+      icon: "✅",
+      cls: styles.icoDone,
+    },
+    {
+      key: "ALL",
+      label: "전체",
+      value: total,
+      icon: "📈",
+      cls: styles.icoAll,
+    },
   ];
-
-  function logout() {
-    localStorage.clear();
-    router.push("/");
-  }
-
   return (
     <div className={styles.main_shell}>
       <MainHeader />
-
+      <FullScreenLoader show={loading} text="로딩 중입니다..." />
       <main className={styles.main_container}>
         <div className={styles.main_titleRow}>
           <h1 className={styles.main_pageTitle}>비전정보통신</h1>
@@ -166,10 +191,20 @@ export default function HomePage() {
           </button>
         </div>
 
+        {/* 4 trạng thái + 전체 – chia đều, click để lọc */}
         <section className={styles.main_statsCard}>
           {stats.map((x) => (
-            <div key={x.label} className={styles.main_statItem}>
-              <div className={`${styles.main_statIcon} ${x.cls}`}>{x.icon}</div>
+            <button
+              key={x.key}
+              type="button"
+              className={`${styles.main_statItem} ${
+                filterStatus === x.key ? styles.main_statItemActive : ""
+              }`}
+              onClick={() => setFilterStatus(x.key)}
+            >
+              <div className={`${styles.main_statIcon} ${x.cls}`}>
+                {x.icon}
+              </div>
               <div className={styles.main_statMeta}>
                 <div className={styles.main_statLabel}>{x.label}</div>
                 <div className={styles.main_statValueRow}>
@@ -177,7 +212,7 @@ export default function HomePage() {
                   <span className={styles.main_statUnit}>건</span>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </section>
 
@@ -222,16 +257,20 @@ export default function HomePage() {
                     <th className={styles.main_colViews}>조회수</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {rows.length === 0 ? (
+                 <tbody>
+                  {rowsView.length === 0 ? (
                     <tr>
                       <td colSpan={8} style={{ textAlign: "center", padding: 20 }}>
                         등록된 요청이 없습니다.
                       </td>
                     </tr>
                   ) : (
-                    rows.map((r) => (
-                      <tr key={r.id}>
+                    rowsView.map((r) => (
+                      <tr
+                        key={r.id}
+                        className={styles.main_rowClickable}
+                        onClick={() => router.push(`/tickets/${r.id}`)}
+                      >
                         <td>{r.id}</td>
                         <td>{r.type}</td>
                         <td>
@@ -243,9 +282,21 @@ export default function HomePage() {
                             {r.status}
                           </span>
                         </td>
+
+                        {/* nếu chỉ muốn click vào tiêu đề thì thêm stopPropagation */}
                         <td className={styles.main_tdTitle}>
-                          <a href="#">{r.title}</a>
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation(); // không trigger onClick của <tr>
+                              router.push(`/tickets/${r.id}`);
+                            }}
+                          >
+                            {r.title}
+                          </a>
                         </td>
+
                         <td>{r.author}</td>
                         <td>{r.assignee}</td>
                         <td>{r.date}</td>
