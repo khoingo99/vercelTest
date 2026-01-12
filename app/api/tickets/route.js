@@ -150,39 +150,42 @@ export async function POST(req) {
     }
     // ------------------
     const files = form.getAll("files").filter(Boolean);
-    // chuẩn bị data attachments để create
-    const attachmentsData = [];
+const attachmentsData = [];
 
-    for (const f of files) {
-      // f là instance File
-      const arrayBuf = await f.arrayBuffer();
-      const buffer = Buffer.from(arrayBuf);
+if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  return NextResponse.json(
+    { ok: false, message: "BLOB_READ_WRITE_TOKEN missing (.env.local / Vercel env)" },
+    { status: 500 }
+  );
+}
 
-      // tên file an toàn
-      const safeOriginalName = (f.name || "file").replace(
-        /[^a-zA-Z0-9.\-_]/g,
-        "_"
-      );
-      const filename =
-        Date.now().toString() +
-        "_" +
-        Math.random().toString(36).slice(2, 8) +
-        "_" +
-        safeOriginalName;
+for (const f of files) {
+  const arrayBuf = await f.arrayBuffer();
 
-       // Vercel Blob 업로드 → public URL 반환
-      const blob = await put(pathname, buffer, {
-        access: "public",
-        contentType: f.type || "application/octet-stream",
-        addRandomSuffix: false,
-      });
+  const safeOriginalName = (f.name || "file").replace(/[^a-zA-Z0-9.\-_]/g, "_");
 
-      attachmentsData.push({
-        name: f.name || safeOriginalName,
-        url: blob.url, // ✅ 이제 /uploads/... 가 아니라 blob.url
-        size: typeof f.size === "number" ? f.size : buffer.length,
-        mimetype: f.type || "application/octet-stream",
-      });
+  // ✅ pathname = đường dẫn file trên Blob
+  const pathname =
+    "tickets/" +
+    Date.now().toString() +
+    "_" +
+    Math.random().toString(36).slice(2, 8) +
+    "_" +
+    safeOriginalName;
+
+  const blob = await put(pathname, arrayBuf, {
+    access: "public",
+    contentType: f.type || "application/octet-stream",
+    token: process.env.BLOB_READ_WRITE_TOKEN, // ✅ quan trọng
+    addRandomSuffix: false,
+  });
+
+  attachmentsData.push({
+    name: f.name || safeOriginalName,
+    url: blob.url,
+    size: typeof f.size === "number" ? f.size : arrayBuf.byteLength,
+    mimetype: f.type || "application/octet-stream",
+  });
     }
 
     const ticket = await prisma.ticket.create({
