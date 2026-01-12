@@ -197,7 +197,21 @@ export default function TicketDetailPage() {
             </div>
             <div>
               <span className={styles.ticketDetail_metaLabel}>상태</span>
-              <span className={styles.ticketDetail_status}>{statusLabel}</span>
+              <span
+                className={`${styles.ticketDetail_status} ${
+                  ticket.status === "NEW"
+                    ? styles.st_대기
+                    : ticket.status === "IN_PROGRESS"
+                    ? styles.st_진행
+                    : ticket.status === "DONE"
+                    ? styles.st_완료
+                    : ticket.status === "CANCELED"
+                    ? styles.st_취소
+                    : ""
+                }`}
+              >
+                {statusLabel}
+              </span>
             </div>
             <div>
               <span className={styles.ticketDetail_metaLabel}>조회수</span>

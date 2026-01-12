@@ -227,12 +227,12 @@ export default function TicketCreatePage() {
                 className={styles.visuallyHidden}
               />
               <p className={styles.dropText}>
-                버튼 클릭 또는 파일을 여기로 드래그하세요
+                버튼 클릭 또는 파일을 여기로 드래그하세요(4.5MB 이하)
               </p>
               <button
                 type="button"
                 className={styles.btnGhostSmall}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => fileInputRef.current?.click()}     
               >
                 파일선택
               </button>
@@ -323,7 +323,7 @@ export default function TicketCreatePage() {
             className={styles.btnPrimary}
             disabled={submitting}
           >
-            {submitting ? "등록중..." : "등록"}
+             등록
           </button>
         </div>
       </form>

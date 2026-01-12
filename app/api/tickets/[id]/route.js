@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
 import fs from "fs/promises";
 import path from "path";
+import { put } from "@vercel/blob";
+
+export const runtime = "nodejs";
 
 const ALLOWED_STATUS = ["NEW", "IN_PROGRESS", "DONE", "CANCELED"];
 const uploadDir = path.join(process.cwd(), "public", "uploads");
@@ -60,8 +63,6 @@ export async function GET(_req, { params }) {
 // PUT /api/tickets/:id  (FormData, giống POST nhưng có xoá/thêm file)
 export async function PUT(req, { params }) {
   const { id: rawId } = await params;   // rawId = "1" nếu gọi /api/tickets/1
-    console.log("[GET /api/tickets/:id] rawId =", rawId);
-
     const id = Number(rawId);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -128,37 +129,47 @@ export async function PUT(req, { params }) {
     }
 
     // xử lý file mới
-    await ensureUploadDir();
-    const newFiles = form.getAll("files").filter(Boolean);
+    // xử lý file mới (upload lên Vercel Blob)
+const newFiles = form.getAll("files").filter(Boolean);
 
-    const attachmentsCreate = [];
-    for (const f of newFiles) {
-      const arrayBuf = await f.arrayBuffer();
-      const buffer = Buffer.from(arrayBuf);
+const attachmentsCreate = [];
 
-      const safeOriginalName = (f.name || "file").replace(
-        /[^a-zA-Z0-9.\-_]/g,
-        "_"
-      );
-      const filename =
-        Date.now().toString() +
-        "_" +
-        Math.random().toString(36).slice(2, 8) +
-        "_" +
-        safeOriginalName;
+if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  return NextResponse.json(
+    { ok: false, message: "BLOB_READ_WRITE_TOKEN missing (Vercel env / .env.local)" },
+    { status: 500 }
+  );
+}
 
-      const filePath = path.join(uploadDir, filename);
-      await fs.writeFile(filePath, buffer);
+for (const f of newFiles) {
+  const arrayBuf = await f.arrayBuffer();
 
-      const url = "/uploads/" + filename;
+  const safeOriginalName = (f.name || "file").replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  const pathname =
+    "tickets/" +
+    id +
+    "/" +
+    Date.now().toString() +
+    "_" +
+    Math.random().toString(36).slice(2, 8) +
+    "_" +
+    safeOriginalName;
 
-      attachmentsCreate.push({
-        name: f.name || safeOriginalName,
-        url,
-        size: typeof f.size === "number" ? f.size : buffer.length,
-        mimetype: f.type || "application/octet-stream",
-      });
-    }
+  const blob = await put(pathname, arrayBuf, {
+    access: "public",
+    contentType: f.type || "application/octet-stream",
+    token: process.env.BLOB_READ_WRITE_TOKEN, // ✅ quan trọng
+    addRandomSuffix: false,
+  });
+
+  attachmentsCreate.push({
+    name: f.name || safeOriginalName,
+    url: blob.url, // ✅ lưu URL blob
+    size: typeof f.size === "number" ? f.size : arrayBuf.byteLength,
+    mimetype: f.type || "application/octet-stream",
+  });
+}
+
 
     // build data update
     const dataToUpdate = {

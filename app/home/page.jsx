@@ -133,6 +133,7 @@ export default function HomePage() {
       value: summary.NEW,
       icon: "🕒",
       cls: styles.icoWait,
+      className: "st_대기"
     },
     {
       key: "IN_PROGRESS",
@@ -140,6 +141,7 @@ export default function HomePage() {
       value: summary.IN_PROGRESS,
       icon: "🏃",
       cls: styles.icoProgress,
+      className: "st_진행"
     },
     {
       key: "CANCELED",
@@ -147,6 +149,7 @@ export default function HomePage() {
       value: summary.CANCELED,
       icon: "⛔",
       cls: styles.icoCancel,
+      className: "st_취소"
     },
     {
       key: "DONE",
@@ -154,6 +157,7 @@ export default function HomePage() {
       value: summary.DONE,
       icon: "✅",
       cls: styles.icoDone,
+      className: "st_완료"
     },
     {
       key: "ALL",
@@ -272,7 +276,21 @@ export default function HomePage() {
                       <td>{r.id}</td>
                       <td>{r.type}</td>
                       <td>
-                        <span className={styles.badge}>{r.status}</span>
+                        <span
+                          className={`${styles.badge} ${
+                            r.status === "대기"
+                              ? styles.st_대기
+                              : r.status === "진행"
+                              ? styles.st_진행
+                              : r.status === "완료"
+                              ? styles.st_완료
+                              : r.status === "취소"
+                              ? styles.st_취소
+                              : ""
+                          }`}
+                        >
+                          {r.status}
+                        </span>
                       </td>
                       <td className={styles.main_tdTitle}>{r.title}</td>
                       <td>{r.author}</td>
