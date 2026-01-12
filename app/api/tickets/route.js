@@ -1,22 +1,13 @@
 // app/api/tickets/route.js
 import { NextResponse } from "next/server";
 import prisma from "../../../lib/prisma";
-import fs from "fs/promises";
-import path from "path";
+import {put} from "@vercel/blob"
 
 // Các trạng thái cho phép
 const ALLOWED_STATUS = ["NEW", "IN_PROGRESS", "DONE", "CANCELED"];
-
+export const runtime = "nodejs";
 // Thư mục upload trong /public/uploads
-const uploadDir = path.join(process.cwd(), "public", "uploads");
 
-async function ensureUploadDir() {
-  try {
-    await fs.mkdir(uploadDir, { recursive: true });
-  } catch (e) {
-    // nếu đã tồn tại thì bỏ qua
-  }
-}
 
 /**
  * GET /api/tickets?page=1&size=10&status=NEW
@@ -158,11 +149,7 @@ export async function POST(req) {
       );
     }
     // ------------------
-
-    await ensureUploadDir();
-
     const files = form.getAll("files").filter(Boolean);
-
     // chuẩn bị data attachments để create
     const attachmentsData = [];
 
@@ -183,14 +170,16 @@ export async function POST(req) {
         "_" +
         safeOriginalName;
 
-      const filePath = path.join(uploadDir, filename);
-      await fs.writeFile(filePath, buffer);
-
-      const url = "/uploads/" + filename; // đường dẫn public
+       // Vercel Blob 업로드 → public URL 반환
+      const blob = await put(pathname, buffer, {
+        access: "public",
+        contentType: f.type || "application/octet-stream",
+        addRandomSuffix: false,
+      });
 
       attachmentsData.push({
         name: f.name || safeOriginalName,
-        url,
+        url: blob.url, // ✅ 이제 /uploads/... 가 아니라 blob.url
         size: typeof f.size === "number" ? f.size : buffer.length,
         mimetype: f.type || "application/octet-stream",
       });
@@ -204,14 +193,9 @@ export async function POST(req) {
         status,
         authorId: author.id,
         assigneeName: assigneeUsername || null,
-        attachments:
-          attachmentsData.length > 0
-            ? { create: attachmentsData }
-            : undefined,
+        attachments: attachmentsData.length ? { create: attachmentsData } : undefined,
       },
-      include: {
-        attachments: true,
-      },
+      include: { attachments: true },
     });
 
     return NextResponse.json({ ok: true, ticket });
