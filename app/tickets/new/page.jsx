@@ -68,11 +68,20 @@ export default function TicketCreatePage() {
 
   async function uploadFilesToBlob(files) {
     const uploaded = [];
+  
     for (const file of files) {
-      const blob = await upload(file.name, file, {
+     const safeName = (file.name || "file").replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      const pathname =
+        "tickets/" +
+        Date.now() +
+        "_" +
+        Math.random().toString(36).slice(2, 8) +
+        "_" +
+        safeName;
+
+      const blob = await upload(pathname, file, {
         access: "public",
-        handleUploadUrl: "/api/blob", 
-        addRandomSuffix: true 
+        handleUploadUrl: "/api/blob",
       });
       uploaded.push({
         name: file.name,
