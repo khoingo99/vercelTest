@@ -72,7 +72,7 @@ export default function TicketCreatePage() {
       const blob = await upload(file.name, file, {
         access: "public",
         handleUploadUrl: "/api/blob", 
-         allowOverwrite: true 
+        addRandomSuffix: true 
       });
       uploaded.push({
         name: file.name,
