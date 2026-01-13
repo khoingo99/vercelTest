@@ -21,12 +21,10 @@ export default function SignUpPage() {
   async function onSubmit(e) {
     e.preventDefault();
     setError(null);
-
     if (password !== password2) {
       setError("비밀번호가 동일하지 않습니다.");
       return;
     }
-
     try {
       setLoading(true);
       const res = await fetch("/api/auth/register", {
@@ -34,14 +32,12 @@ export default function SignUpPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, name, email, phone, password,department,position }),
       });
-
       const json = await res.json();
       if (!res.ok || json.ok === false) {
         setError(json.message || "회원가입에 실패했습니다.");
         return;
      }
-
-      // login ngay sau khi register
+      // 가입 후 바로 로그인
       const loginRes = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +50,6 @@ export default function SignUpPage() {
         if (loginData.user.name)
           localStorage.setItem("name", loginData.user.name);
       }
-
       router.push("/");
     } catch (err) {
       console.error(err);
@@ -63,7 +58,6 @@ export default function SignUpPage() {
       setLoading(false);
     }
   }
-
   return (
     <main className={styles.signup_wrap}>
         <FullScreenLoader show={loading} text="회원가입 중입니다..." />
@@ -73,7 +67,6 @@ export default function SignUpPage() {
           <span className={styles.signup_req} />
           표시는 반드시 입력하셔야 합니다.
         </div>
-
         <div className={styles.signup_row}>
           <div className={styles.signup_label}>
             <span className={styles.signup_req} />
@@ -93,14 +86,12 @@ export default function SignUpPage() {
             </div>
           </div>
         </div>
-
         {/* 비밀번호 */}
         <div className={styles.signup_row}>
           <label className={styles.signup_label}>
             <span className={styles.signup_req} />
             비밀번호
           </label>
-
           <div className={styles.signup_fieldCol}>
             <input
               type="password"
@@ -109,7 +100,6 @@ export default function SignUpPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-
             <div className={styles.signup_help}>
               - 영문자, 숫자, 특수문자 중 임의로 8자에서 16자까지 조합<br/>
               - 대소문자를 구분하오니 입력시 대소문자의 상태를 확인 하시기 바랍니다.
@@ -132,7 +122,6 @@ export default function SignUpPage() {
             />
           </div>
         </div>
-
         <div className={styles.signup_row}>
           <div className={styles.signup_label}>
             <span className={styles.signup_req} />
@@ -148,7 +137,6 @@ export default function SignUpPage() {
             />
           </div>
         </div>
-
         <div className={styles.signup_row}>
           <div className={styles.signup_label}>
             <span className={styles.signup_req} />
@@ -165,7 +153,6 @@ export default function SignUpPage() {
             />
           </div>
         </div>
-
         <div className={styles.signup_row}>
           <div className={styles.signup_label}>
             <span className={styles.signup_req} />
@@ -190,7 +177,6 @@ export default function SignUpPage() {
             <span className={styles.signup_req} />
             부서 / 직위
           </div>
-
           <div className={styles.signup_fieldRow}>
             <div className={styles.signup_fieldCol}>
               <input
@@ -212,9 +198,7 @@ export default function SignUpPage() {
             </div>
           </div>
         </div>
-
         {error && <p className={styles.textError}>{error}</p>}
-
         <div className={styles.signup_actions}>
           <a href="/" className={styles.btnSecondary}>
             취소

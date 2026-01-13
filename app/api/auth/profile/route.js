@@ -1,7 +1,6 @@
 // app/api/auth/profile/route.js
 import { NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
-import bcrypt from "bcryptjs";
 
 // GET /api/auth/profile?id=123
 export async function GET(req) {
@@ -34,7 +33,6 @@ export async function GET(req) {
       { status: 404 }
     );
   }
-
   return NextResponse.json({ ok: true, user });
 }
 
@@ -77,7 +75,7 @@ export async function PUT(req) {
       position: position?.trim() || null,
     };
 
-    // nếu có nhập newPassword ⇒ bắt buộc phải có currentPassword và validate
+    // 새 비번 입력 시 현재 비번 필요
     if (newPassword && newPassword.trim().length > 0) {
       if (!currentPassword) {
         return NextResponse.json(
@@ -85,7 +83,6 @@ export async function PUT(req) {
           { status: 400 }
         );
       }
-
      
       if ( currentPassword !== user.password) {
         return NextResponse.json(
@@ -105,7 +102,6 @@ export async function PUT(req) {
           { status: 400 }
         );
       }
-
       dataToUpdate.password = newPassword;
     }
 
@@ -122,7 +118,6 @@ export async function PUT(req) {
         position: true,
       },
     });
-
     return NextResponse.json({ ok: true, user: updated });
   } catch (err) {
     console.error("Profile update error:", err);

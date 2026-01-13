@@ -13,14 +13,12 @@ const STATUS_LABEL = {
   CANCELED: "취소",
   DONE: "완료",
 };
-
 const STATUS_KO = {
   NEW: "대기",
   IN_PROGRESS: "처리중",
   CANCELED: "취소",
   DONE: "완료",
 };
-
 function buildPages(current, totalPages, max) {
   totalPages = Math.max(1, totalPages);
   const half = Math.floor(max / 2);
@@ -31,13 +29,10 @@ function buildPages(current, totalPages, max) {
   for (let i = start; i <= end; i++) arr.push(i);
   return arr;
 }
-
 export default function HomePage() {
   const router = useRouter();
-
   const [page, setPage] = useState(1);
   const size = 10;
-
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState({
@@ -50,33 +45,26 @@ export default function HomePage() {
   const [filterStatus, setFilterStatus] = useState("ALL"); // ALL | NEW | IN_PROGRESS | ...
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
-
-  // check login
+  // 로그인 체크
   useEffect(() => {
     const username = localStorage.getItem("username");
     if (!username) router.replace("/");
   }, [router]);
-
   useEffect(() => {
     let aborted = false;
-
     async function load() {
       try {
         setLoading(true);
         setErrMsg("");
-
         const res = await fetch(
           `/api/tickets?page=${page}&size=${size}&status=${filterStatus}`,
           { cache: "no-store" }
         );
         const json = await res.json();
-
         if (!res.ok || json.ok === false) {
           throw new Error(json.message || "API error");
         }
-
         const items = Array.isArray(json.items) ? json.items : [];
-
         const mapped = items.map((t) => {
           const rawStatus = t.status || "NEW";
           return {
@@ -94,7 +82,6 @@ export default function HomePage() {
             views: t.views ?? 0,
           };
         });
-
         if (!aborted) {
           setRows(mapped);
           setTotal(json.total || items.length);
@@ -107,13 +94,11 @@ export default function HomePage() {
         if (!aborted) setLoading(false);
       }
     }
-
     load();
     return () => {
       aborted = true;
     };
   }, [page, size, filterStatus]);
-
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(total / size)),
     [total, size]
@@ -122,10 +107,8 @@ export default function HomePage() {
     () => buildPages(page, totalPages, 7),
     [page, totalPages]
   );
-
   const totalAll =
     summary.NEW + summary.IN_PROGRESS + summary.CANCELED + summary.DONE;
-
   const statCards = [
     {
       key: "NEW",
@@ -167,21 +150,17 @@ export default function HomePage() {
       cls: styles.icoAll,
     },
   ];
-
   const handleStatClick = (key) => {
     setFilterStatus(key);
     setPage(1);
   };
-
   const handleRowClick = (id) => {
     router.push(`/tickets/${id}`);
   };
-
   return (
     <div className={styles.main_shell}>
       <FullScreenLoader show={loading} text="불러오는 중입니다..." />
       <MainHeader />
-
       <main className={styles.main_container}>
         <div className={styles.main_titleRow}>
           <h1 className={styles.main_pageTitle}>비전정보통신</h1>
@@ -192,8 +171,7 @@ export default function HomePage() {
             작성하기
           </button>
         </div>
-
-        {/* 4+1 ô trạng thái */}
+        {/* 상태 테이블 */}
         <section className={styles.main_statsCard}>
           {statCards.map((x) => {
             const active = filterStatus === x.key;
@@ -222,13 +200,11 @@ export default function HomePage() {
             );
           })}
         </section>
-
-        {/* bảng */}
+        {/* 테이블 */}
         <section className={styles.main_card}>
           {errMsg && !loading && (
             <div className={styles.main_error}>오류: {errMsg}</div>
           )}
-
           <div className={styles.main_tableWrap}>
             {rows.length === 0 ? (
               <table className={styles.main_table}>
@@ -303,8 +279,7 @@ export default function HomePage() {
               </table>
             )}
           </div>
-
-          {/* phân trang */}
+          {/* 페이징 */}
           <div className={styles.main_pagination}>
             {totalPages === 1 ? (
               <button className={styles.pageCurrent}>1</button>
@@ -323,7 +298,6 @@ export default function HomePage() {
                     <span className={styles.ellipsis}>…</span>
                   </>
                 )}
-
                 {pages.map((p) => (
                   <button
                     key={p}
@@ -333,7 +307,6 @@ export default function HomePage() {
                     {p}
                   </button>
                 ))}
-
                 {pages[pages.length - 1] < totalPages && (
                   <>
                     <span className={styles.ellipsis}>…</span>

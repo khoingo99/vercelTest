@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "../../../ui/ui.module.css";
 import MainHeader from "../../../components/MainHeader";
 import FullScreenLoader from "../../../components/FullScreenLoader";
+import { upload } from "@vercel/blob/client";
 
 const STATUS_OPTIONS = [
   { value: "NEW",         label: "상태: 대기" },
@@ -13,53 +14,42 @@ const STATUS_OPTIONS = [
   { value: "DONE",        label: "상태: 완료" },
   { value: "CANCELED",    label: "상태: 취소" },
 ];
-
 const fileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
-
 export default function TicketEditPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
-
   const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState("NEW");
-
   const [existingAttachments, setExistingAttachments] = useState([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState([]);
   const [uploadFiles, setUploadFiles] = useState([]);
-
   const [isDropping, setIsDropping] = useState(false);
   const fileInputRef = useRef(null);
-
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // check login
   useEffect(() => {
     const u = localStorage.getItem("username");
     if (!u) router.replace("/");
   }, [router]);
 
-  // load dữ liệu ticket
   useEffect(() => {
     if (!id) return;
     let aborted = false;
-
     async function load() {
       try {
         setLoading(true);
         setErrMsg("");
-
         const res = await fetch(`/api/tickets/${id}`);
         const json = await res.json();
         if (!res.ok || json.ok === false) {
           throw new Error(json.message || "요청 정보를 불러오지 못했습니다.");
         }
-
         if (!aborted) {
           const t = json.data;
           setTitle(t.title || "");
@@ -78,14 +68,12 @@ export default function TicketEditPage() {
         if (!aborted) setLoading(false);
       }
     }
-
     load();
     return () => {
       aborted = true;
     };
   }, [id]);
-
-  // ===== file mới (giống trang new) =====
+  // ===== 새로운 파일 =====
   const addFiles = (newFiles) => {
     setUploadFiles((prev) => {
       const map = new Map();
@@ -93,13 +81,11 @@ export default function TicketEditPage() {
       return Array.from(map.values());
     });
   };
-
   const handleFileInputChange = (e) => {
     if (!e.target.files) return;
     addFiles(Array.from(e.target.files));
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDropping(false);
@@ -107,14 +93,11 @@ export default function TicketEditPage() {
       addFiles(Array.from(e.dataTransfer.files));
     }
   };
-
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDropping(true);
   };
-
   const handleDragLeave = () => setIsDropping(false);
-
   const removeNewFileAt = (index) => {
     setUploadFiles((prev) => {
       const next = [...prev];
@@ -122,13 +105,11 @@ export default function TicketEditPage() {
       return next;
     });
   };
-
   const clearAllNewFiles = () => {
     setUploadFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-
-  // ===== xoá file cũ =====
+  // ===== 기존 파일 삭제 =====
   const removeExistingAttachment = (attachmentId) => {
     setExistingAttachments((prev) =>
       prev.filter((a) => a.id !== attachmentId)
@@ -137,7 +118,23 @@ export default function TicketEditPage() {
       prev.includes(attachmentId) ? prev : [...prev, attachmentId]
     );
   };
-
+ async function uploadFilesToBlob(files) {
+    const uploaded = [];
+    for (const file of files) {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob", 
+        addRandomSuffix: true,
+      });
+      uploaded.push({
+        name: file.name,
+        url: blob.url,
+        size: file.size,
+        mimetype: file.type || "application/octet-stream",
+      });
+    }
+    return uploaded;
+  }
   // ===== submit PUT =====
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -154,43 +151,35 @@ export default function TicketEditPage() {
       alert("내용은 필수입니다.");
       return;
     }
-
     const authorUsername = localStorage.getItem("username");
     if (!authorUsername) {
       alert("로그인 후 이용해주세요.");
       router.push("/");
       return;
     }
-
     setSubmitting(true);
     try {
-      const fd = new FormData();
-      fd.append("category", category.trim());
-      fd.append("title", title.trim());
-      fd.append("content", content);
-      fd.append("authorUsername", authorUsername);
-      fd.append("assigneeUsername", assignee.trim());
-      fd.append("status", status);
-
-      if (deletedAttachmentIds.length > 0) {
-        fd.append(
-          "deletedAttachmentIds",
-          JSON.stringify(deletedAttachmentIds)
-        );
-      }
-
-      uploadFiles.forEach((f) => fd.append("files", f, f.name));
-
+      let attachments = [];
+      if (uploadFiles.length > 0) {
+      attachments = await uploadFilesToBlob(uploadFiles);
+    }
+    const fd = new FormData();
+    fd.append("category", category.trim());
+    fd.append("title", title.trim());
+    fd.append("content", content);
+    fd.append("authorUsername", authorUsername);
+    fd.append("assigneeUsername", assignee.trim());
+    fd.append("status", status);
+    fd.append("attachments", JSON.stringify(attachments));
+    fd.append("deletedAttachmentIds", JSON.stringify(deletedAttachmentIds));
       const res = await fetch(`/api/tickets/${id}`, {
         method: "PUT",
         body: fd,
       });
-
       const json = await res.json();
       if (!res.ok || json.ok === false) {
         throw new Error(json.message || "수정에 실패했습니다.");
       }
-
       alert("수정되었습니다.");
       router.push(`/tickets/${id}`);
     } catch (err) {
@@ -200,7 +189,6 @@ export default function TicketEditPage() {
       setSubmitting(false);
     }
   };
-
   if (loading) {
     return (
       <div className={styles.main_shell}>
@@ -212,7 +200,6 @@ export default function TicketEditPage() {
       </div>
     );
   }
-
   if (errMsg && !submitting && !loading && !title) {
     return (
       <div className={styles.main_shell}>
@@ -223,12 +210,10 @@ export default function TicketEditPage() {
       </div>
     );
   }
-
   return (
     <div className={styles.main_shell}>
       <FullScreenLoader show={submitting} text="수정 중입니다..." />
       <MainHeader />
-
       <div className={styles.ticket_shell}>
         <form className={styles.ticket_card} onSubmit={handleSubmit}>
           {/* 제목 */}
@@ -246,14 +231,12 @@ export default function TicketEditPage() {
               />
             </div>
           </div>
-
           {/* 업무 구분 / 담당자 / 상태 */}
           <div className={styles.ticket_row}>
             <label className={styles.ticket_label}>
               <span className={styles.ticket_req} />
               업무구분 / 담당자
             </label>
-
             <div className={styles.ticket_fieldRow}>
               <div className={styles.ticket_fieldCol}>
                 <input
@@ -263,7 +246,6 @@ export default function TicketEditPage() {
                   onChange={(e) => setCategory(e.target.value)}
                 />
               </div>
-
               <div className={styles.ticket_fieldCol}>
                 <input
                   className={styles.ticket_input}
@@ -272,7 +254,6 @@ export default function TicketEditPage() {
                   onChange={(e) => setAssignee(e.target.value)}
                 />
               </div>
-
               <div className={styles.ticket_fieldCol}>
                 <select
                   className={styles.ticket_select}
@@ -288,11 +269,9 @@ export default function TicketEditPage() {
               </div>
             </div>
           </div>
-
           {/* 첨부파일 (기존 + 새 파일) */}
           <div className={styles.ticket_row}>
             <label className={styles.ticket_label}>첨부파일</label>
-
             <div className={styles.ticket_field}>
               {/* 기존 파일 */}
               {existingAttachments.length > 0 && (
@@ -304,7 +283,6 @@ export default function TicketEditPage() {
                     {existingAttachments.map((file) => {
                       const isImage =
                         file.mimetype?.startsWith("image/");
-
                       return (
                         <li
                           key={file.id}
@@ -315,7 +293,6 @@ export default function TicketEditPage() {
                               <img src={file.url} alt={file.name} />
                             </div>
                           )}
-
                           <div className={styles.fileInfo}>
                             <span className={styles.fileName}>
                               {file.name}
@@ -324,7 +301,6 @@ export default function TicketEditPage() {
                               {(file.size / 1024).toFixed(1)} KB
                             </span>
                           </div>
-
                           <button
                             type="button"
                             title="삭제"
@@ -342,8 +318,7 @@ export default function TicketEditPage() {
                   </ul>
                 </div>
               )}
-
-              {/* 드롭존 + 새 파일 목록 (y chang trang new) */}
+              {/* 드롭존 + 새 파일 목록 */}
               <div
                 className={`${styles.dropzone} ${
                   isDropping ? styles.dropzoneActive : ""
@@ -370,7 +345,6 @@ export default function TicketEditPage() {
                   파일선택
                 </button>
               </div>
-
               {uploadFiles.length > 0 && (
                 <div className={styles.filesWrap}>
                   <div className={styles.filesHeader}>
@@ -386,7 +360,6 @@ export default function TicketEditPage() {
                   <ul className={styles.fileList}>
                     {uploadFiles.map((f, i) => {
                       const isImage = f.type?.startsWith("image/");
-
                       return (
                         <li
                           key={fileKey(f)}
@@ -405,7 +378,6 @@ export default function TicketEditPage() {
                               />
                             </div>
                           )}
-
                           <div className={styles.fileInfo}>
                             <span className={styles.fileName}>
                               {f.name}
@@ -414,7 +386,6 @@ export default function TicketEditPage() {
                               {(f.size / 1024).toFixed(1)} KB
                             </span>
                           </div>
-
                           <button
                             type="button"
                             title="삭제"
@@ -432,7 +403,6 @@ export default function TicketEditPage() {
               )}
             </div>
           </div>
-
           {/* 내용 */}
           <div className={styles.ticket_row}>
             <label className={styles.ticket_label}>
@@ -449,7 +419,6 @@ export default function TicketEditPage() {
               />
             </div>
           </div>
-
           {/* 버튼 */}
           <div className={styles.ticket_actions}>
             <button

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Image from "next/image";
 import MainHeader from "../../components/MainHeader";
 import styles from "../../ui/ui.module.css";
 import FullScreenLoader from "../../components/FullScreenLoader";
@@ -18,38 +17,30 @@ export default function TicketDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
-
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
-
-  // ✅ thêm state cho 댓글
+  // 댓글
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [postingComment, setPostingComment] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-
     let aborted = false;
-
     async function load() {
       try {
         setLoading(true);
         setErrMsg("");
-
         const res = await fetch(`/api/tickets/${id}`);
         const json = await res.json();
-
         if (!res.ok || json.ok === false) {
           throw new Error(json.message || "요청 정보를 불러오지 못했습니다.");
         }
-
         if (!aborted) setTicket(json.data);
-
         if (!aborted) {
         setTicket(json.data);
-        setComments(json.data.comments || []); // ✅ nhận list comment
+        setComments(json.data.comments || []);
       }
       } catch (e) {
         console.error(e);
@@ -58,13 +49,11 @@ export default function TicketDetailPage() {
         if (!aborted) setLoading(false);
       }
     }
-
     load();
     return () => {
       aborted = true;
     };
   }, [id]);
-
   if (loading) {
     return (
       <div className={styles.main_shell}>
@@ -76,7 +65,6 @@ export default function TicketDetailPage() {
       </div>
     );
   }
-
   if (!ticket) {
     return (
       <div className={styles.main_shell}>
@@ -89,27 +77,20 @@ export default function TicketDetailPage() {
       </div>
     );
   }
-
   const statusLabel =
     STATUS_LABEL[ticket.status || "NEW"] || ticket.status || "대기";
-
   const createdText = ticket.createdAt
     ? new Date(ticket.createdAt).toLocaleString("ko-KR")
     : "";
-
   // ---------- attachments ----------
   const attachments = ticket.attachments || [];
-
   const imageAttachments = attachments.filter((a) => {
     if (a.mimetype && a.mimetype.startsWith("image/")) return true;
-    // fallback theo tên file
     return /\.(png|jpe?g|gif|webp)$/i.test(a.name || "");
   });
-
   const otherAttachments = attachments.filter(
     (a) => !imageAttachments.includes(a)
   );
-  // ---------------------------------
 
   async function handleSubmitComment() {
     const text = commentText.trim();
@@ -118,13 +99,11 @@ export default function TicketDetailPage() {
       return;
     }
     if (!id) return;
-
-    const username = localStorage.getItem("username"); // giống lúc tạo ticket
+    const username = localStorage.getItem("username");
     if (!username) {
       alert("로그인이 필요합니다.");
       return;
     }
-
     try {
       setPostingComment(true);
       const res = await fetch(`/api/tickets/${id}/comments`, {
@@ -132,14 +111,11 @@ export default function TicketDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: text, username }),
       });
-
       const json = await res.json();
       if (!res.ok || json.ok === false) {
         alert(json.message || "댓글 등록에 실패했습니다.");
         return;
       }
-
-      // ✅ thêm comment mới vào cuối list
       setComments((prev) => [...prev, json.data]);
       setCommentText("");
     } catch (err) {
@@ -149,7 +125,6 @@ export default function TicketDetailPage() {
       setPostingComment(false);
     }
   }
-
   return (
     <div className={styles.main_shell}>
       <MainHeader />
@@ -160,7 +135,6 @@ export default function TicketDetailPage() {
             <span className={styles.ticketDetail_badge}>{ticket.category}</span>
             <h1 className={styles.ticketDetail_title}>{ticket.title}</h1>
           </div>
-
           <div className={styles.ticketDetail_actions}>
             <button
               type="button"
@@ -178,10 +152,8 @@ export default function TicketDetailPage() {
             </button>
           </div>
         </div>
-
-        {/* 카드 nội dung chính */}
+        {/* 카드  */}
         <section className={styles.ticketDetail_card}>
-          {/* meta dòng trên */}
           <div className={styles.ticketDetail_metaRow}>
             <div>
               <span className={styles.ticketDetail_metaLabel}>작성자</span>
@@ -220,14 +192,11 @@ export default function TicketDetailPage() {
               </span>
             </div>
           </div>
-
-          {/* nội dung */}
           <div className={styles.ticketDetail_body}>
             {ticket.content?.split("\n").map((line, idx) => (
               <p key={idx}>{line}</p>
             ))}
           </div>
-
           {/* 첨부파일 */}
           <div className={styles.ticketDetail_filesRow}>
             <div className={styles.ticketDetail_filesLabel}>첨부파일</div>
@@ -239,20 +208,13 @@ export default function TicketDetailPage() {
                 </span>
               ) : (
                 <div className={styles.filesWrap}>
-                  {/* nếu muốn có tiêu đề giống “선택된 파일” */}
-                  {/* <div className={styles.filesHeader}>
-                    <strong>첨부파일</strong>
-                  </div> */}
-
                   <ul className={styles.fileList}>
                     {attachments.map((file) => {
                       const isImage =
                         file.mimetype?.startsWith("image/") ||
                         file.mimeType?.startsWith("image/");
-
                       return (
                         <li key={file.id} className={styles.fileItem}>
-                          {/* preview 이미지 – dùng đúng layout phần đăng ký */}
                           {isImage && (
                             <div className={styles.filePreview}>
                               <a
@@ -265,15 +227,12 @@ export default function TicketDetailPage() {
                               </a>
                             </div>
                           )}
-
                           <div className={styles.fileInfo}>
                             <span className={styles.fileName}>{file.name}</span>
                             <span className={styles.fileMeta}>
                               {(file.size / 1024).toFixed(1)} KB
                             </span>
                           </div>
-
-                          {/* file không phải ảnh thì chỉ có nút 다운로드 */}
                           {!isImage && (
                             <a
                               href={file.url}
@@ -292,7 +251,6 @@ export default function TicketDetailPage() {
             </div>
           </div>
         </section>
-
         {/* 담당자 정보 */}
         <section className={styles.ticketDetail_assigneeCard}>
           <div className={styles.ticketDetail_assigneeLabel}>담당자</div>
@@ -302,11 +260,6 @@ export default function TicketDetailPage() {
                 <span className={styles.ticketDetail_assigneeName}>
                   {ticket.assigneeName}
                 </span>
-                {/* {ticket.assignee.phone && (
-                  <span className={styles.ticketDetail_assigneePhone}>
-                    ( ☎ {ticket.assignee.phone} )
-                  </span>
-                )} */}
               </>
             ) : (
               <span className={styles.ticketDetail_noAssignee}>
@@ -315,8 +268,7 @@ export default function TicketDetailPage() {
             )}
           </div>
         </section>
-
-        {/* 댓글 UI (khung) */}
+        {/* 댓글 UI*/}
         <section className={styles.ticketDetail_commentCard}>
           <div className={styles.ticketDetail_commentHeader}>
             <span>댓글</span>
@@ -331,7 +283,6 @@ export default function TicketDetailPage() {
           />
           <div className={styles.ticketDetail_commentFooter}>
             <label className={styles.ticketDetail_mailCheck}>
-            
             </label>
             <div className={styles.ticketDetail_commentRight}>
               <button

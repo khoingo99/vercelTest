@@ -4,10 +4,8 @@ import prisma from "../../../../../lib/prisma";
 // POST /api/tickets/:id/comments
 export async function POST(req, { params }) {
   try {
-    
-    const { id: rawId } = await params;   // rawId = "1" nếu gọi /api/tickets/1
+    const { id: rawId } = await params;
     console.log("[GET /api/tickets/:id] rawId =", rawId);
-
     const id = Number(rawId);
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -19,7 +17,7 @@ export async function POST(req, { params }) {
 
     const body = await req.json();
     const content = String(body.content || "").trim();
-    const username = String(body.username || "").trim(); // lấy từ localStorage
+    const username = String(body.username || "").trim(); // localStorage에서 가져옴
 
     if (!content) {
       return NextResponse.json(

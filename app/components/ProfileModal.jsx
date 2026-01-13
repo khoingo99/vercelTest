@@ -15,36 +15,30 @@ export default function ProfileModal({ onClose, onUpdated }) {
     department: "",
     position: "",
   });
-
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // load dữ liệu user hiện tại
+  // 사용자 데이터 다시 로딩
   useEffect(() => {
     async function loadProfile() {
       try {
         setError("");
         setLoading(true);
-
         if (typeof window === "undefined") return;
         const userId = localStorage.getItem("userId");
         if (!userId) {
           setError("로그인이 필요합니다.");
           return;
         }
-
         const res = await fetch(`/api/auth/profile?id=${userId}`);
         const json = await res.json();
-
         if (!res.ok || json.ok === false) {
           throw new Error(json.message || "정보를 불러오지 못했습니다.");
         }
-
         const u = json.user;
         setForm({
           id: u.id,
@@ -62,7 +56,6 @@ export default function ProfileModal({ onClose, onUpdated }) {
         setLoading(false);
       }
     }
-
     loadProfile();
   }, []);
 
@@ -72,22 +65,18 @@ export default function ProfileModal({ onClose, onUpdated }) {
       setForm((prev) => ({ ...prev, [field]: value }));
     };
   }
-
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
-
     if (newPassword || confirmPassword) {
       if (newPassword !== confirmPassword) {
         setError("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
         return;
       }
     }
-
     try {
       setLoading(true);
-
       const payload = {
         id: form.id,
         name: form.name,
@@ -98,22 +87,19 @@ export default function ProfileModal({ onClose, onUpdated }) {
         currentPassword: currentPassword || undefined,
         newPassword: newPassword || undefined,
       };
-
       const res = await fetch("/api/auth/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-
       if (!res.ok || json.ok === false) {
         throw new Error(json.message || "회원정보 수정에 실패했습니다.");
       }
-
       setSuccessMsg("회원정보가 수정되었습니다.");
       alert("수정되었습니다.");   
       onClose();
-      // cập nhật localStorage + thông báo lên Header
+      // localStorage 업데이트
       if (typeof window !== "undefined") {
         localStorage.setItem("name", json.user.name || "");
         localStorage.setItem("email", json.user.email || "");
@@ -121,9 +107,7 @@ export default function ProfileModal({ onClose, onUpdated }) {
         localStorage.setItem("department", json.user.department || "");
         localStorage.setItem("position", json.user.position || "");
       }
-
       if (onUpdated) onUpdated(json.user);
-
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -134,9 +118,7 @@ export default function ProfileModal({ onClose, onUpdated }) {
       setLoading(false);
     }
   }
-
   return (
-    
     <div className={styles.profile_modal_backdrop}>
     <FullScreenLoader show={loading} text="로딩 중입니다..." />
       <div className={styles.profile_modal}>
@@ -150,7 +132,6 @@ export default function ProfileModal({ onClose, onUpdated }) {
             ×
           </button>
         </div>
-
         <form onSubmit={handleSubmit}>
           <div className={styles.profile_modal_row}>
             <label className={styles.signup_label}><span className={styles.signup_req} /> 아이디 / 이름</label>
@@ -179,7 +160,6 @@ export default function ProfileModal({ onClose, onUpdated }) {
               placeholder="비밀번호 변경 시 필수 입력"
             />
           </div>
-
           {/* 새 비밀번호 */}
           <div className={styles.profile_modal_row}>
             <label className={styles.signup_label}>새 비밀번호</label>
@@ -194,7 +174,6 @@ export default function ProfileModal({ onClose, onUpdated }) {
                - 영문자, 숫자, 특수문자를 포함하여 8~16자로 입력해주세요.
             </div>
           </div>
-
           {/* 비밀번호 확인 */}
           <div className={styles.profile_modal_row}>
             <label className={styles.signup_label}>비밀번호 확인</label>
@@ -205,7 +184,6 @@ export default function ProfileModal({ onClose, onUpdated }) {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
-
           {/* 이메일 */}
           <div className={styles.profile_modal_row}>
             <label className={styles.signup_label}><span className={styles.signup_req} /> 이메일</label>
@@ -217,7 +195,6 @@ export default function ProfileModal({ onClose, onUpdated }) {
               required
             />
           </div>
-
           {/* 전화번호 */}
           <div className={styles.profile_modal_row}>
             <label className={styles.signup_label}><span className={styles.signup_req} /> 전화번호</label>
@@ -228,8 +205,7 @@ export default function ProfileModal({ onClose, onUpdated }) {
               required
             />
           </div>
-
-          {/* 부서 / 직위 cùng 1 dòng */}
+          {/* 부서 / 직위 */}
           <div className={styles.profile_modal_row}>
             <label className={styles.signup_label}><span className={styles.signup_req} /> 부서 / 직위</label>
             <div className={styles.signup_fieldRow}>
@@ -249,12 +225,10 @@ export default function ProfileModal({ onClose, onUpdated }) {
               />
             </div>
           </div>
-
           {error && <div className={styles.profile_modal_error}>{error}</div>}
           {successMsg && (
             <div className={styles.profile_modal_success}>{successMsg}</div>
           )}
-
           <div className={styles.profile_modal_actions}>
             <button
               type="button"

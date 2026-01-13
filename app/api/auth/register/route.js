@@ -13,9 +13,7 @@ export async function POST(req) {
       department,
       position,
     } = body;
-
-    // ----- validate password theo rule -----
-    // 8~16 ký tự, có ít nhất: 1 chữ cái, 1 số, 1 ký tự đặc biệt
+    // 비번 규칙 설정
     const pwRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/;
 
     if (!pwRegex.test(password || "")) {
@@ -28,9 +26,7 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-    // ---------------------------------------
-
-    // (các validate khác: username, email…)
+    // ID, 메일 검증 및 유효 확인
     if (!username || !email) {
       return NextResponse.json(
         { ok: false, message: "아이디와 이메일은 필수입니다." },

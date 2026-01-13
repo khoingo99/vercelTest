@@ -1,192 +1,85 @@
 // app/api/tickets/route.js
 import { NextResponse } from "next/server";
 import prisma from "../../../lib/prisma";
-import {put} from "@vercel/blob"
 
-// Các trạng thái cho phép
-const ALLOWED_STATUS = ["NEW", "IN_PROGRESS", "DONE", "CANCELED"];
 export const runtime = "nodejs";
-// Thư mục upload trong /public/uploads
 
-
-/**
- * GET /api/tickets?page=1&size=10&status=NEW
- */
+const ALLOWED_STATUS = ["NEW", "IN_PROGRESS", "DONE", "CANCELED"];
+// GET /api/tickets?page=1&size=10&status=NEW
 export async function GET(req) {
   try {
     const url = new URL(req.url);
-
     const page = Math.max(1, Number(url.searchParams.get("page") || 1));
-    const size = Math.min(
-      50,
-      Math.max(1, Number(url.searchParams.get("size") || 10))
-    );
-
+    const size = Math.min(50, Math.max(1, Number(url.searchParams.get("size") || 10)));
     const status = url.searchParams.get("status") || "ALL";
     const skip = (page - 1) * size;
-
-    // ✅ điều kiện lọc theo trạng thái (nếu không phải ALL)
-    const where =
-      status !== "ALL"
-        ? {
-            status, // NEW | IN_PROGRESS | DONE | CANCELED
-          }
-        : {};
-
+    const where = status !== "ALL" ? { status } : {};
     const [items, total, grouped] = await Promise.all([
       prisma.ticket.findMany({
-        where,           // ✅ áp dụng filter
+        where,
         skip,
         take: size,
         orderBy: { id: "desc" },
         include: {
-          author: {
-            select: { username: true, name: true },
-          },
+          author: { select: { username: true, name: true } },
         },
       }),
-
-      // ✅ total sau khi lọc (dùng cho pagination)
       prisma.ticket.count({ where }),
-
-      // ✅ summary cho TOÀN BỘ ticket (không truyền where)
       prisma.ticket.groupBy({
         by: ["status"],
         _count: { _all: true },
       }),
     ]);
 
-    // build summary chung cho 4 ô
-    const summary = {
-      NEW: 0,
-      IN_PROGRESS: 0,
-      CANCELED: 0,
-      DONE: 0,
-    };
-
+    const summary = { NEW: 0, IN_PROGRESS: 0, CANCELED: 0, DONE: 0 };
     grouped.forEach((g) => {
-      if (summary[g.status] != null) {
-        summary[g.status] = g._count._all;
-      }
+      if (summary[g.status] != null) summary[g.status] = g._count._all;
     });
 
-    return NextResponse.json({
-      ok: true,
-      items,
-      page,
-      size,
-      total,     // ✅ total theo filter
-      summary,   // ✅ tổng toàn bộ ticket
-    });
+    return NextResponse.json({ ok: true, items, page, size, total, summary });
   } catch (err) {
     console.error("Tickets GET error:", err);
-    return NextResponse.json(
-      { ok: false, message: "목록 조회에 실패했습니다." },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, message: "목록 조회에 실패했습니다." }, { status: 500 });
   }
 }
 
-/**
- * POST /api/tickets
- * Body: FormData
- *  - title, category, content, authorUsername
- *  - assigneeUsername (optional)
- *  - status (NEW / IN_PROGRESS / DONE / CANCELED, optional)
- *  - files: nhiều file
- */
+// POST /api/tickets
 export async function POST(req) {
   try {
     const form = await req.formData();
-
     const title = String(form.get("title") || "").trim();
     const category = String(form.get("category") || "").trim();
     const content = String(form.get("content") || "").trim();
     const authorUsername = String(form.get("authorUsername") || "").trim();
-    const assigneeUsername = String(
-      form.get("assigneeUsername") || ""
-    ).trim();
-
+    const assigneeUsername = String(form.get("assigneeUsername") || "").trim();
     let status = String(form.get("status") || "NEW").trim();
-    if (!ALLOWED_STATUS.includes(status)) {
-      status = "NEW";
-    }
-
+    if (!ALLOWED_STATUS.includes(status)) status = "NEW";
     // ---- validate ----
-    if (!title) {
-      return NextResponse.json(
-        { ok: false, message: "제목은 필수입니다." },
-        { status: 400 }
-      );
+    if (!title) return NextResponse.json({ ok: false, message: "제목은 필수입니다." }, { status: 400 });
+    if (!category) return NextResponse.json({ ok: false, message: "업무 구분은 필수입니다." }, { status: 400 });
+    if (!content) return NextResponse.json({ ok: false, message: "내용은 필수입니다." }, { status: 400 });
+    if (!authorUsername) return NextResponse.json({ ok: false, message: "로그인 정보가 필요합니다." }, { status: 401 });
+    const author = await prisma.user.findUnique({ where: { username: authorUsername } });
+    if (!author) return NextResponse.json({ ok: false, message: "작성자를 찾을 수 없습니다." }, { status: 404 });
+    //  attachments JSON from client
+    let attachmentsData = [];
+    const attachmentsRaw = form.get("attachments");
+    if (attachmentsRaw) {
+      try {
+        const parsed = JSON.parse(String(attachmentsRaw));
+        attachmentsData = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        attachmentsData = [];
+      }
     }
-    if (!category) {
-      return NextResponse.json(
-        { ok: false, message: "업무 구분은 필수입니다." },
-        { status: 400 }
-      );
-    }
-    if (!content) {
-      return NextResponse.json(
-        { ok: false, message: "내용은 필수입니다." },
-        { status: 400 }
-      );
-    }
-    if (!authorUsername) {
-      return NextResponse.json(
-        { ok: false, message: "로그인 정보가 필요합니다." },
-        { status: 401 }
-      );
-    }
-
-    const author = await prisma.user.findUnique({
-      where: { username: authorUsername },
-    });
-
-    if (!author) {
-      return NextResponse.json(
-        { ok: false, message: "작성자를 찾을 수 없습니다." },
-        { status: 404 }
-      );
-    }
-    // ------------------
-    const files = form.getAll("files").filter(Boolean);
-const attachmentsData = [];
-
-if (!process.env.BLOB_READ_WRITE_TOKEN) {
-  return NextResponse.json(
-    { ok: false, message: "BLOB_READ_WRITE_TOKEN missing (.env.local / Vercel env)" },
-    { status: 500 }
-  );
-}
-
-for (const f of files) {
-  const arrayBuf = await f.arrayBuffer();
-
-  const safeOriginalName = (f.name || "file").replace(/[^a-zA-Z0-9.\-_]/g, "_");
-
-  // ✅ pathname = đường dẫn file trên Blob
-  const pathname =
-    "tickets/" +
-    Date.now().toString() +
-    "_" +
-    Math.random().toString(36).slice(2, 8) +
-    "_" +
-    safeOriginalName;
-
-  const blob = await put(pathname, arrayBuf, {
-    access: "public",
-    contentType: f.type || "application/octet-stream",
-    token: process.env.BLOB_READ_WRITE_TOKEN, // ✅ quan trọng
-    addRandomSuffix: false,
-  });
-
-  attachmentsData.push({
-    name: f.name || safeOriginalName,
-    url: blob.url,
-    size: typeof f.size === "number" ? f.size : arrayBuf.byteLength,
-    mimetype: f.type || "application/octet-stream",
-  });
-    }
+    attachmentsData = attachmentsData
+      .filter((a) => a && typeof a.url === "string")
+      .map((a) => ({
+        name: String(a.name || "file"),
+        url: String(a.url),
+        size: Number(a.size || 0),
+        mimetype: String(a.mimetype || "application/octet-stream"),
+      }));
 
     const ticket = await prisma.ticket.create({
       data: {
@@ -204,9 +97,6 @@ for (const f of files) {
     return NextResponse.json({ ok: true, ticket });
   } catch (err) {
     console.error("Tickets POST error:", err);
-    return NextResponse.json(
-      { ok: false, message: "등록에 실패했습니다." },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, message: "등록에 실패했습니다." }, { status: 500 });
   }
 }

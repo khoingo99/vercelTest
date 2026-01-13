@@ -3,19 +3,18 @@
   --primary-dark: #0e91a6;
   --border: #d6e9ee;
   --fg: #222;
-
   min-height: 100svh;
   display: grid;
-  grid-auto-rows: max-content;  /* title + form + footer */
-  justify-items: center;        /* giữa ngang */
-  align-content: center;        /* giữa dọc */
+  grid-auto-rows: max-content;  
+  justify-items: center;        
+  align-content: center;        
   gap: 20px;
   background: #ffffff;
-  padding: 0 16px;              /* padding 2 bên để mobile không dính mép */
+  padding: 0 16px;  
   box-sizing: border-box;
 }
 
-/* Tiêu đề: 장애 모니터링 로그인 */
+/* 장애 모니터링 로그인 */
 .title {
   margin: 0 0 8px;
   font-size: clamp(26px, 3.6vw, 32px);
@@ -25,16 +24,13 @@
   text-align: center;
 }
 
-/* Khối form */
 .form {
-  width: min(520px, 100%);      /* PC ~520px, mobile tự co lại */
+  width: min(520px, 100%);      /* PC ~520px, mobile 자동 반영 */
   display: flex;
   flex-direction: column;
   gap: 14px;
   box-sizing: border-box;
 }
-
-/* Ô input + nút X nằm trong 1 field */
 .field {
   position: relative;
   width: 100%;
@@ -48,7 +44,7 @@
   background: #eef7ff;
   color: var(--fg);
   border-radius: 10px;
-  padding: 0 40px 0 12px;      /* chừa chỗ bên phải cho nút X */
+  padding: 0 40px 0 12px;      
   font-size: 15px;
   outline: none;
   box-sizing: border-box;
@@ -66,7 +62,6 @@
   box-shadow: 0 0 0 3px rgba(17, 168, 191, 0.12);
 }
 
-/* nút X clear ở field 아이디 */
 .iconBtn {
   position: absolute;
   right: 10px;
@@ -88,7 +83,7 @@
   background: #dfeef3;
 }
 
-/* dòng "자동로그인" */
+/* "자동로그인" */
 .optionRow {
   display: flex;
   align-items: center;
@@ -97,21 +92,18 @@
   font-size: 13px;
   color: #6e8f99;
 }
-
 .check {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   user-select: none;
 }
-
 .check input {
   width: 14px;
   height: 14px;
   accent-color: var(--primary);
 }
-
-/* nút 로그인 */
+/* 로그인 버튼 */
 .submit {
   width: 100%;
   height: 52px;
@@ -142,7 +134,7 @@
   box-shadow: none;
 }
 
-/* thông báo lỗi dưới nút 로그인 */
+/* 에러 메시지 */
 .error {
   margin: 6px 0 0;
   color: #c62828;
@@ -150,7 +142,7 @@
   text-align: center;
 }
 
-/* dòng "아직 가입전이신가요?  회원가입" */
+/* "아직 가입전이신가요?  회원가입" */
 .signupRow {
   margin-top: 12px;
   display: flex;
@@ -171,16 +163,15 @@
   text-decoration: underline;
 }
 
-/* footer CopyRight ở dưới cùng */
 .footer {
-  position: fixed;      /* luôn dính dưới màn hình */
+  position: fixed;     
   left: 0;
   right: 0;
-  bottom: 20px;         /* cách mép dưới 16px, muốn sát hẳn thì để 0 */
+  bottom: 20px;        
   font-size: 11px;
   color: #9aa9b1;
   text-align: center;
-  pointer-events: none; /* để không che click ở gần dưới (optional) */
+  pointer-events: none; 
 }
 
 /* ===== SIGNUP ===== */
@@ -582,10 +573,9 @@
 }
 
 .main_tableWrap {
-  overflow-x: auto;      /* ✅ cho phép kéo ngang */
+  overflow-x: auto;     
 }
 
-/* Bảng tối thiểu 720px để không quá chật */
 .main_table {
   width: 100%;
   min-width: 720px;
@@ -735,12 +725,10 @@
 }
 
 .main_statsCard {
-  /* bạn giữ nguyên các thuộc tính cũ, chỉ cần chắc là có cái này */
   display: grid;
   grid-template-columns: repeat(8, 1fr);
 }
 
-/* Tablet: chia 4 cột */
 @media (max-width: 1024px) {
   .main_statsCard {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -753,7 +741,6 @@
   }
 }
 
-/* Mobile: chia 2 cột, toolbar xuống 1 cột */
 @media (max-width: 640px) {
   .main_titleRow {
     flex-direction: column;
@@ -834,7 +821,7 @@
   padding-top: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;          /* khoảng cách chấm đỏ với chữ */
+  gap: 6px;         
 }
 
 
@@ -842,7 +829,7 @@
   width: 6px;
   height: 6px;
   border-radius: 2px;
-  background: #d9534f;   /* cùng màu với signup_req */
+  background: #d9534f;   
   display: inline-block;
 }
 .ticket_fieldRow {
@@ -894,8 +881,6 @@
   background: #f3f7fc;
   padding: 0 14px;
 }
-
-/* dropzone */
 
 .dropzone {
   border: 2px dashed #e1e8ee;
@@ -1014,8 +999,7 @@
   background: #fff;
   box-shadow: 0 0 0 3px rgba(17, 168, 191, 0.12);
 }
-/* danh sách file dạng grid */
-/* list chung */
+
 .fileList {
   margin: 8px 0 0;
   padding: 0;
@@ -1025,15 +1009,13 @@
   gap: 12px;
 }
 
-/* khi chỉ có 1 file -> căn giữa */
 .fileListSingle {
   justify-content: center;
 }
 
-/* card mặc định */
 .fileItem {
   position: relative;
-  width: 240px;             /* kích thước card bình thường */
+  width: 240px;           
   border-radius: 8px;
   border: 1px solid #e1e7ef;
   background: #f9fcff;
@@ -1044,13 +1026,11 @@
   box-sizing: border-box;
 }
 
-/* khi chỉ có 1 ảnh: card chiếm nửa chiều ngang container */
 .fileItemSingle {
   width: 50%;
-  max-width: 420px;         /* có thể chỉnh tuỳ thích */
+  max-width: 420px;     
 }
 
-/* thumbnail luôn vuông */
 .filePreview {
   position: relative;
   width: 100%;
@@ -1086,7 +1066,6 @@
   color: #8b9aa7;
 }
 
-/* nút X rõ hơn, tròn đỏ góc phải */
 .fileRemove {
   position: absolute;
   right: 6px;
@@ -1110,7 +1089,6 @@
   background: #c82333;
 }
 
-/* Select box đồng bộ với input */
 .ticket_select {
   width: 100%;
   height: 44px;
@@ -1124,7 +1102,7 @@
   box-sizing: border-box;
   transition: border-color 0.15s ease, background 0.15s ease,
     box-shadow 0.15s ease;
-  appearance: none;          /* ẩn style default */
+  appearance: none;         
   
 }
 
@@ -1143,8 +1121,6 @@
   z-index: 50;
 }
 
-
-/* vùng nền trắng */
 .header_shell {
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
@@ -1159,7 +1135,6 @@
   justify-content: space-between;
   box-sizing: border-box;
 }
-
 /* logo VISION */
 .header_logo {
   border: none;
@@ -1173,7 +1148,6 @@
   cursor: pointer;
 }
 
-/* phần navigation bên phải */
 .header_nav {
   display: flex;
   align-items: center;
@@ -1329,7 +1303,7 @@
   color: #9ca3af;
 }
 
-/* 담당자 card */
+/* 담당자 */
 .ticketDetail_assigneeCard {
   background: #fff;
   border-radius: 12px;
@@ -1363,7 +1337,7 @@
   color: #9ca3af;
 }
 
-/* 댓글 card */
+/* 댓글  */
 .ticketDetail_commentCard {
   background: #fff;
   border-radius: 12px;
@@ -1438,7 +1412,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000; /* cao hơn header, modal khác */
+  z-index: 2000; 
 }
 
 .fsLoader_box {
@@ -1478,17 +1452,16 @@
 
 .main_statsCard {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)); /* chia đều 5 ô */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
-/* mỗi item là 1 ô trạng thái */
 .main_statItem {
   display: flex;
-  flex-direction: column;          /* icon trên, text dưới */
-  align-items: center;             /* căn giữa ngang */
-  justify-content: center;         /* căn giữa dọc */
+  flex-direction: column;          
+  align-items: center;           
+  justify-content: center;         
   padding: 18px 16px;
   border-radius: 16px;
   border: 1px solid #e5e7eb;
@@ -1500,20 +1473,16 @@
     background-color 0.15s ease,
     transform 0.12s ease;
 }
-
 .main_statItem:hover {
   border-color: #22c55e33;
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
   transform: translateY(-1px);
 }
 
-/* ô đang được chọn */
 .main_statItemActive {
-  border-color: #36b5ff;
   background: #e8f7ff;
 }
 
-/* icon tròn phía trên */
 .main_statIcon {
   width: 34px;
   height: 34px;
@@ -1524,9 +1493,8 @@
   font-size: 18px;
 }
 
-/* khối text bên dưới icon */
 .main_statMeta {
-  text-align: center; /* căn giữa text */
+  text-align: center; 
 }
 
 .main_statLabel {
@@ -1553,10 +1521,9 @@
   color: #9ca3af;
 }
 
-/* ===== màu text khi ô được chọn ===== */
 .main_statItemActive .main_statLabel,
 .main_statItemActive .main_statValue {
-  color: #059669;  /* xanh lá nhấn */
+  color: #059669; 
 }
 
 .main_statItemActive .main_statUnit {

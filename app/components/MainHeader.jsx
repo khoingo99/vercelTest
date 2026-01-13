@@ -13,21 +13,18 @@ export default function MainHeader() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Lấy tên từ localStorage khi load
+  // localStorage 가져오고 로딩
   useEffect(() => {
     if (typeof window === "undefined") return;
     const storedName = localStorage.getItem("name");
     if (storedName) setName(storedName);
   }, []);
-
   const handleLogoClick = () => {
     router.push("/home"); // trang home
   };
-
   const handleEditProfile = () => {
     setShowProfile(true);
   };
-
   const handleLogout = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("userId");
@@ -38,16 +35,12 @@ export default function MainHeader() {
       localStorage.removeItem("department");
       localStorage.removeItem("position");
     }
-    router.push("/"); // trang login
+    router.push("/"); 
   };
-
   return (
     <>
       <header className={styles.header_wrapper}>
-        {/* thanh nâu phía trên */}
         <div className={styles.header_barTop} />
-
-        {/* header chính */}
         <div className={styles.header_shell}>
           <div className={styles.header_inner}>
             <button
@@ -57,12 +50,10 @@ export default function MainHeader() {
             >
               <Image src={logo} alt="VISION" width={100} height={50} priority />
             </button>
-
             <nav className={styles.header_nav}>
               {name && (
                 <span className={styles.header_username}>{name}</span>
               )}
-
               <button
                 type="button"
                 className={
@@ -86,13 +77,11 @@ export default function MainHeader() {
           </div>
         </div>
       </header>
-
-      {/* Popup sửa thông tin */}
+      {/* Popup */}
       {showProfile && (
         <ProfileModal
           onClose={() => setShowProfile(false)}
           onUpdated={(user) => {
-            // cập nhật lại tên hiển thị ở header sau khi sửa
             setName(user.name || "");
           }}
         />
